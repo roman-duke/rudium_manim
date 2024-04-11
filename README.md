@@ -12,7 +12,7 @@ To install manim, refer to [this](https://docs.manim.community/en/stable/install
 Right now, all the animation scenes are in one file (to be modularized later)
 To run any of them, type the following command in terminal:
 ```
-manim -pqh slama_part_I.py 
+manim -pqh darwin.py 
 ```
 then choose from any of the Scenes available.
 
