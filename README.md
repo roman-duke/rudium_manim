@@ -1,6 +1,9 @@
 # Getting started with Manim
 This project contains all the exercises/mini-projects done while getting conversant with Manim. [Manim](https://docs.manim.community/en/stable/guides/deep_dive.html) is a python library for math animations developed by the YouTube math stardom, Grant Sanderson([3Blue1Brown](https://www.youtube.com/@3blue1brown)).
 
+## Installing Manim
+To install manim, refer to [this](https://docs.manim.community/en/stable/installation.html)
+
 ## Current Mini Projects 
 - Binary Search Algorithm.
 - Random Shuffle Animation.  
