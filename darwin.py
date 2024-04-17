@@ -191,3 +191,201 @@ class BinarySearch(Scene):
       search_helper(min, max)
 
     binary_search()
+
+class InscribedTriangle(Scene):
+  def construct(self):
+    label_list = ['x', 'y', 'z']
+    # create three dots
+    p1 = Dot(point=UP)
+    p2 = Dot(point=DOWN + LEFT)
+    p3 = Dot(point=DOWN + RIGHT)
+
+    # create the three labels
+    labels = [Tex(f"${label}$") for label in label_list]
+    
+    self.play(
+      AnimationGroup(
+        Write(p1), 
+        Write(p2), 
+        Write(p3),
+        lag_ratio=.5
+      )
+    )
+
+    def text_one_updater(t1: Tex):
+      t1.next_to(p1, direction=UP, buff=.3)
+
+    def text_two_updater(t2: Tex):
+      t2.next_to(p2, direction=LEFT + .25*DOWN, buff=.3)
+
+    def text_three_updater(t3: Tex):
+      t3.next_to(p3, direction=RIGHT + .25*DOWN, buff=.3)
+
+    def line_one_updater(line_one: Line):
+      line_one.set_points_by_ends(p1.get_center(), p2.get_center())
+
+    def line_two_updater(line_two: Line):
+      line_two.set_points_by_ends(p2.get_center(), p3.get_center())
+      
+    def line_three_updater(line_three: Line):
+      line_three.set_points_by_ends(p3.get_center(), p1.get_center())
+
+    def circle_updater(circle: Circle):
+      circle.replace(circle.from_three_points(p1.get_center(), p2.get_center(), p3.get_center()))
+      
+    # draw the initial lines
+    line1 = Line(start=p1.get_center(), end=p2.get_center())
+    line2 = Line(start=p2.get_center(), end=p3.get_center())
+    line3 = Line(start=p3.get_center(), end=p1.get_center())
+
+    line_one_updater(line1)
+    line_two_updater(line2)
+    line_three_updater(line3)
+
+    self.play(
+      AnimationGroup(
+        Write(line1),
+        Write(line2),
+        Write(line3),
+        lag_ratio=1,
+        run_time=.85
+      )
+    )
+
+    # create a circle from three points
+    circle = Circle.from_three_points(p1.get_center(), p2.get_center(), p3.get_center())
+    self.play(Write(circle))
+
+    # Add the updater functions
+    line1.add_updater(line_one_updater)
+    line2.add_updater(line_two_updater)
+    line3.add_updater(line_three_updater)
+
+    circle.add_updater(circle_updater)
+
+    # Now add the labels
+    t1 = labels[0]
+    t2 = labels[1]
+    t3 = labels[2]
+
+    text_one_updater(t1)
+    text_two_updater(t2)
+    text_three_updater(t3)
+
+    self.play(
+      FadeIn(t1, shift=UP * 0.5),
+      FadeIn(t2, shift=UP*0.5),
+      FadeIn(t3, shift=UP * 0.5)
+    )
+
+    t1.add_updater(text_one_updater)
+    t2.add_updater(text_two_updater)
+    t3.add_updater(text_three_updater)
+
+    # Now move points two and three around
+    self.play(
+      p1.animate.shift(0.5 * RIGHT),
+      p2.animate.shift(0.5 * LEFT),
+    )
+
+
+# I wasn't able to do the maze task successfully, I shall return to it later
+
+# Hilbert's curve
+class Path(Polygram):
+  def __init__(self, points, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.set_points_as_corners(points)
+
+  def get_important_points(self):
+      """Returns the important points of the curve."""
+      # shot explanation: Manim uses quadratic Bézier curves to create paths
+      # > each curve is determined by 4 points - 2 anchor and 2 control
+      # > VMobject's builtin self.points returns *all* points
+      # > we, however, only care about the anchors
+      # > see https://en.wikipedia.org/wiki/Bézier_curve for more details
+      return list(self.get_start_anchors()) + [self.get_end_anchors()[-1]]
+  
+class HilbertCurve(Scene):
+  def construct(self):
+    # initial path to be passed to the hilbert_generator
+    points = [LEFT + DOWN, LEFT + UP, RIGHT + UP, RIGHT + DOWN]
+
+    # buff distance
+    buff_dist = 1
+
+    # path drawing runtime
+    path_run_time = 1
+
+    path, path_top_right, path_bottom_left, path_bottom_right = [Path([LEFT]) for _ in range(4)]
+
+    animation_label = Tex("Hilbert's Curve")
+    animation_label.shift(UP * 2.75)
+    self.play(FadeIn(animation_label, shift=DOWN * 1.5))
+    
+    def hilbert_generator(n: int, points):
+      nonlocal path_run_time
+      nonlocal buff_dist
+      nonlocal path
+      nonlocal path_top_right
+      nonlocal path_bottom_left
+      nonlocal path_bottom_right
+      
+      # duplicate the path, so as to have something to show when you remove the inital path
+      persistent_path = path.copy()
+      self.add(persistent_path)
+      self.remove(path)
+      
+      path = Path(points, color=WHITE)
+      
+      # Draw a path through these points
+      self.play(Create(path), run_time=path_run_time)
+
+      if (n == 0):
+        # Stop recursion at this point
+        return
+      
+      # self.play(path.animate.set_color(DARK_GRAY))
+
+      # Remove all the pre-existing paths from the scene
+      self.remove(persistent_path, path_top_right, path_bottom_left, path_bottom_right)
+
+      # Create a copy of the path mobject and then move it to the right
+      self.play(path.animate.scale(.5).shift(LEFT + UP).set_color(DARK_GRAY))
+      path_top_right = path.copy()
+      self.play(path_top_right.animate.next_to(path, RIGHT, buff=buff_dist))
+      
+      # create copies of the top left and top right paths
+      path_bottom_left = path.copy()
+      path_bottom_right = path_top_right.copy()
+
+      # Now rotate them, while also shifting them downwards 
+      self.play(
+        path_bottom_left.animate.rotate(-90 * DEGREES).next_to(path, DOWN, buff=buff_dist),
+        path_bottom_right.animate.rotate(90 * DEGREES).next_to(path_top_right, DOWN, buff=buff_dist)
+      )
+
+      # Now swap the starting and ending points of both the bottom left and bottom right path mobjects
+      pp_bottom_left = path_bottom_left.get_important_points()
+      pp_bottom_left.reverse()
+      # pp_bottom_left[0], pp_bottom_left[-1] = pp_bottom_left[-1], pp_bottom_left[0]
+      pp_bottom_right = path_bottom_right.get_important_points()
+      pp_bottom_right.reverse()
+      # pp_bottom_right[0], pp_bottom_right[-1] = pp_bottom_right[-1], pp_bottom_right[0]
+
+      # Retrieve the path points for the top left and top right
+      pp_top_left = path.get_important_points()
+      pp_top_right = path_top_right.get_important_points()
+
+      # concatenate them
+      path_points = pp_bottom_left + pp_top_left + pp_top_right + pp_bottom_right
+
+      # Reduce the buff distance for the next execution
+      buff_dist *= 0.5
+
+      # Reduce run_time duration of path drawing for the next execution
+      path_run_time *= 1.4
+
+      hilbert_generator(n-1, path_points)
+
+    hilbert_generator(5, points)
