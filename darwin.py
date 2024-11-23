@@ -462,3 +462,46 @@ class MovingCameraExample(MovingCameraScene):
     self.wait(0.5)
 
     self.play(self.camera.frame.animate.restore())
+
+
+class Fibonacci(MovingCameraScene):
+  def construct(self):
+    annotated_squares = VGroup()
+    direction_array = [RIGHT, UP, LEFT, DOWN]
+    fib_sequence = [1, 1]
+
+    # Create first square before the pattern kicks off
+
+    square = Square()
+    label = MathTex(f'{fib_sequence[0]}^2')
+    label.scale(2).move_to(square)
+    annotated_square = VGroup(square, label)
+
+    annotated_squares.add(annotated_square)
+
+    self.play(
+      self.camera.frame.animate.scale(0.5),
+      Write(annotated_squares)
+    )
+
+    self.camera.frame.save_state()
+
+    def fib_pattern_generator(dir: list, fibIdx: int, VG: VGroup):
+      square = Square()
+      if (fibIdx == 1):
+        label = MathTex(f'{fib_sequence[1]}^2')
+
+      label.scale(2).move_to(square)
+      annotated_square = VGroup(square, label)
+      annotated_square.next_to(annotated_squares, direction=direction_array[fibIdx-1], buff=0)
+      annotated_squares.add(annotated_square)
+
+      self.play(
+        AnimationGroup(
+          self.camera.frame.animate.move_to(annotated_squares),
+          FadeIn(annotated_square, shift=RIGHT*1.25),
+          lag_ratio=0.25,
+        )
+      )
+
+    fib_pattern_generator(direction_array, 1, annotated_squares)
