@@ -6,7 +6,7 @@ class NextTo(Scene):
   def construct(self):
     circle_array = [Circle(radius=0.5, color=WHITE)
                       for _ in range(4)]
-    
+
     rectangle = Rectangle(width=5, height=3)
 
     # Using Python's equivalent of Javascript's spread syntax, --> "*"
@@ -70,7 +70,7 @@ class Shuffle(Scene):
     # Play a staggered animation of the creation of the circles
     self.play(
       LaggedStart(
-        *[Write(o) for o in circle_list], 
+        *[Write(o) for o in circle_list],
         lag_ratio=0.05,
         run_time=2
       )
@@ -99,7 +99,7 @@ class Shuffle(Scene):
 
       # Revert the circle array back to original state
       circle_positions.append(first_rand_circle_choice)
-    
+
     # Now that animation is done, show the initially highlighted circle
     self.play(random_circle.animate.set_color(RED_C))
 
@@ -153,7 +153,7 @@ class BinarySearch(Scene):
         # Check if guess is equal to target
         if (numbers_list[index] == target):
           self.play(
-            FadeOut(arrow_guess), 
+            FadeOut(arrow_guess),
             arrow_left.animate.next_to(squares_list[index], direction=DOWN),
             arrow_right.animate.next_to(squares_list[index], direction=DOWN),
             run_time=.5
@@ -163,11 +163,11 @@ class BinarySearch(Scene):
         elif (numbers_list[index] < target):
           min_copy = min
           min = index + 1
-          # Fix the left arrow under the left local extreme point, 
-          # fade the redundant blocks, 
+          # Fix the left arrow under the left local extreme point,
+          # fade the redundant blocks,
           # then fade out completely the guess arrow
           self.play(
-            arrow_left.animate.next_to(squares_list[min], direction=DOWN), 
+            arrow_left.animate.next_to(squares_list[min], direction=DOWN),
             FadeOut(arrow_guess),
             *[blocks[i].animate.fade(.6) for i in range(min_copy, index + 1)]
           )
@@ -176,12 +176,12 @@ class BinarySearch(Scene):
 
         elif (numbers_list[index] > target):
           max_copy = max
-          max = index - 1 
-          # Fix the right arrow under the right local extreme point, 
-          # fade the redundant blocks, 
+          max = index - 1
+          # Fix the right arrow under the right local extreme point,
+          # fade the redundant blocks,
           # then fade out completely the guess arrow
           self.play(
-            arrow_right.animate.next_to(squares_list[max], direction=DOWN), 
+            arrow_right.animate.next_to(squares_list[max], direction=DOWN),
             FadeOut(arrow_guess),
             *[blocks[i].animate.fade(.6) for i in range(index, max_copy + 1)]
           )
@@ -202,11 +202,11 @@ class InscribedTriangle(Scene):
 
     # create the three labels
     labels = [Tex(f"${label}$") for label in label_list]
-    
+
     self.play(
       AnimationGroup(
-        Write(p1), 
-        Write(p2), 
+        Write(p1),
+        Write(p2),
         Write(p3),
         lag_ratio=.5
       )
@@ -226,13 +226,13 @@ class InscribedTriangle(Scene):
 
     def line_two_updater(line_two: Line):
       line_two.set_points_by_ends(p2.get_center(), p3.get_center())
-      
+
     def line_three_updater(line_three: Line):
       line_three.set_points_by_ends(p3.get_center(), p1.get_center())
 
     def circle_updater(circle: Circle):
       circle.replace(circle.from_three_points(p1.get_center(), p2.get_center(), p3.get_center()))
-      
+
     # draw the initial lines
     line1 = Line(start=p1.get_center(), end=p2.get_center())
     line2 = Line(start=p2.get_center(), end=p3.get_center())
@@ -305,7 +305,7 @@ class Path(Polygram):
       # > we, however, only care about the anchors
       # > see https://en.wikipedia.org/wiki/Bézier_curve for more details
       return list(self.get_start_anchors()) + [self.get_end_anchors()[-1]]
-  
+
 class HilbertCurve(Scene):
   def construct(self):
     # initial path to be passed to the hilbert_generator
@@ -322,7 +322,7 @@ class HilbertCurve(Scene):
     animation_label = Tex("Hilbert's Curve")
     animation_label.shift(UP * 2.75)
     self.play(FadeIn(animation_label, shift=DOWN * 1.5))
-    
+
     def hilbert_generator(n: int, points):
       nonlocal path_run_time
       nonlocal buff_dist
@@ -330,21 +330,21 @@ class HilbertCurve(Scene):
       nonlocal path_top_right
       nonlocal path_bottom_left
       nonlocal path_bottom_right
-      
+
       # duplicate the path, so as to have something to show when you remove the inital path
       persistent_path = path.copy()
       self.add(persistent_path)
       self.remove(path)
-      
+
       path = Path(points, color=WHITE)
-      
+
       # Draw a path through these points
       self.play(Create(path), run_time=path_run_time)
 
       if (n == 0):
         # Stop recursion at this point
         return
-      
+
       # self.play(path.animate.set_color(DARK_GRAY))
 
       # Remove all the pre-existing paths from the scene
@@ -354,12 +354,12 @@ class HilbertCurve(Scene):
       self.play(path.animate.scale(.5).shift(LEFT + UP).set_color(DARK_GRAY))
       path_top_right = path.copy()
       self.play(path_top_right.animate.next_to(path, RIGHT, buff=buff_dist))
-      
+
       # create copies of the top left and top right paths
       path_bottom_left = path.copy()
       path_bottom_right = path_top_right.copy()
 
-      # Now rotate them, while also shifting them downwards 
+      # Now rotate them, while also shifting them downwards
       self.play(
         path_bottom_left.animate.rotate(-90 * DEGREES).next_to(path, DOWN, buff=buff_dist),
         path_bottom_right.animate.rotate(90 * DEGREES).next_to(path_top_right, DOWN, buff=buff_dist)
@@ -389,3 +389,76 @@ class HilbertCurve(Scene):
       hilbert_generator(n-1, path_points)
 
     hilbert_generator(5, points)
+
+class StarrySky(Scene):
+  def construct(self):
+    random.seed(0xDEADBEEF)
+
+    vertices = [i for i in range(1, 12)]
+    edges = [(1, 2), (2, 3), (3, 4), (2, 4), (2, 5), (6, 5),
+                 (1, 7), (5, 7), (2, 8), (1, 9), (10, 8), (5, 11)]
+
+    def RandomStar():
+      """Create a pretty random star."""
+      return Star(
+        random.randint(5, 7),
+        fill_opacity=1,
+        outer_radius=0.1,
+        color=WHITE).rotate(random.uniform(0, 2 * PI)
+      )
+
+    def RandomSkyLine(u, v, z_index=None):
+      return DashedLine(u, v, dash_length=random.uniform(0.03, 0.07), z_index=z_index)
+
+    # custom graph with star vertices and dashed line edges
+    g = Graph(vertices, edges,
+              layout_config={"seed": 0},
+              vertex_type=RandomStar,
+              edge_type=RandomSkyLine,
+              ).scale(2).rotate(-PI / 2)
+
+    self.play(Write(g))
+
+    self.play(FadeOut(g))
+
+class MovingCameraExample(MovingCameraScene):
+  def construct(self):
+    square = Square()
+
+    self.play(Write(square))
+
+    self.camera.frame.save_state()
+
+    # zoom for the square to fill in the entire view
+    self.play(self.camera.frame.animate.set_height(square.height * 1.5))
+
+    circle = Circle().next_to(square, LEFT)
+
+    # move the camera to the new object
+    self.play(
+      AnimationGroup(
+        self.camera.frame.animate.move_to(circle),
+        Write(circle),
+        lag_ratio=0.5
+      )
+    )
+
+    self.wait(0.5)
+
+    # zoom out (increasing frame size covers more of the screen)
+    self.play(self.camera.frame.animate.scale(1.3))
+
+    triangle = Triangle().next_to(square, RIGHT)
+
+    # move the camera again
+    self.play(
+      AnimationGroup(
+        self.camera.frame.animate.move_to(triangle),
+        Write(triangle),
+        lag_ratio=0.5
+      )
+    )
+
+    self.wait(0.5)
+
+    self.play(self.camera.frame.animate.restore())
