@@ -468,13 +468,13 @@ class Fibonacci(MovingCameraScene):
   def construct(self):
     annotated_squares = VGroup()
     direction_array = [RIGHT, UP, LEFT, DOWN]
-    fib_sequence = [1, 1]
+    fib_n2 = 1
+    fib_n1 = 1
 
     # Create first square before the pattern kicks off
-
     square = Square()
-    label = MathTex(f'{fib_sequence[0]}^2')
-    label.scale(2).move_to(square)
+    label = MathTex(f'{fib_n2}^2')
+    label.scale(square.height/2).move_to(square)
     annotated_square = VGroup(square, label)
 
     annotated_squares.add(annotated_square)
@@ -486,22 +486,90 @@ class Fibonacci(MovingCameraScene):
 
     self.camera.frame.save_state()
 
-    def fib_pattern_generator(dir: list, fibIdx: int, VG: VGroup):
-      square = Square()
-      if (fibIdx == 1):
-        label = MathTex(f'{fib_sequence[1]}^2')
+    # Create an array that stores all the points that would be used to anchor the fibonacci spiral
+    square_anchors = [square.get_vertices()[0]]
+    starting_point = square.get_vertices()[1]
 
-      label.scale(2).move_to(square)
+    ## THIS FUNCTION IS SOOOO NOT PURE, lol
+    def fib_pattern_generator(directions: list[Vector], fibSequenceIdx: int, fib_n2: int, fib_n1: int, square_group: VGroup, square_anchors: list[tuple[float, float, float]]):
+      direction = directions[fibSequenceIdx%4-1]
+      square = Square()
+
+      if (direction == RIGHT).all() or (direction == LEFT).all():
+        square.scale_to_fit_height(square_group.height)
+      else:
+        square.scale_to_fit_height(square_group.width)
+
+      label = MathTex(f'{fib_n1}^2')
+
+
+      label.scale(square.height / 2).move_to(square)
       annotated_square = VGroup(square, label)
-      annotated_square.next_to(annotated_squares, direction=direction_array[fibIdx-1], buff=0)
+      annotated_square.next_to(annotated_squares, direction=direction, buff=0)
       annotated_squares.add(annotated_square)
+
+      square_anchors.append(square.get_vertices()[fibSequenceIdx%4])
+
+      # Calculate the next fib number
+      fib_n1, fib_n2 = (fib_n2 + fib_n1), fib_n1
+
+      # Get the fibSequenceIdx
+      fibSequenceIdx += 1
 
       self.play(
         AnimationGroup(
-          self.camera.frame.animate.move_to(annotated_squares),
-          FadeIn(annotated_square, shift=RIGHT*1.25),
+          # self.camera.frame.animate.scale(1 if (direction == RIGHT).all() or (direction == LEFT).all() else 2),
+          self.camera.frame.animate.move_to(annotated_squares).scale(1 if (direction == RIGHT).all() or (direction == LEFT).all() else 2.5),
+          FadeIn(annotated_square, shift=direction*1.25),
           lag_ratio=0.25,
         )
       )
 
-    fib_pattern_generator(direction_array, 1, annotated_squares)
+      if fibSequenceIdx == 8:
+        return
+
+      else:
+        fib_pattern_generator(directions, fibSequenceIdx, fib_n2, fib_n1, annotated_squares, square_anchors)
+
+    fib_pattern_generator(direction_array, 1, fib_n2, fib_n1, annotated_squares, square_anchors)
+
+    starting_dot = Dot().move_to(starting_point)
+    moving_dot = Dot().move_to(starting_point)
+
+    def follow_dot(camera: Camera):
+      """An updater which continually makes the camera follow the movement of a point"""
+      camera.move_to(moving_dot.get_center())
+
+    self.camera.frame.add_updater(follow_dot)
+    self.add(self.camera.frame)
+
+    path = TracedPath(moving_dot.get_center)
+    self.add(path)
+
+    self.play(
+      AnimationGroup(
+        self.camera.frame.animate.restore().move_to(starting_point),
+        Write(starting_dot),
+        lag_ratio=1
+      )
+    )
+
+    for p in square_anchors:
+      self.play(
+        Rotate(moving_dot, about_point=p, angle=PI/2),
+        self.camera.frame.animate.scale(1.12),
+        rate_func=linear
+      )
+
+    self.wait()
+
+    # cleanup
+    self.camera.frame.clear_updaters()
+
+    self.play(
+      AnimationGroup(
+        self.camera.frame.animate.set_height(annotated_squares.height * 1.5).move_to(annotated_squares),
+      )
+      # FadeOut(annotated_squares),
+      # Unwrite(path),
+    )
