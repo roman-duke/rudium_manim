@@ -573,3 +573,84 @@ class Fibonacci(MovingCameraScene):
       # FadeOut(annotated_squares),
       # Unwrite(path),
     )
+
+# PLOTTING AND 3D SCENES
+from math import sin, cos
+
+class GraphExample(Scene):
+  def construct(self):
+    axes = Axes(x_range=[-10, 10], y_range=[-5, 5])
+    labels = axes.get_axis_labels(x_label="x", y_label="y")
+
+    def f1(t):
+        """Parametric function of a circle."""
+        return (cos(t) * 3 - 4.5, sin(t) * 3)
+
+    def f2(t):
+        """Parametric function of <3."""
+        return (
+            0.2 * (16 * (sin(t)) ** 3) + 4.5,
+            0.2 * (13 * cos(t) - 5 * cos(2 * t) - 2 * cos(3 * t) - cos(4 * t)),
+        )
+
+    # the t_range parameter determines the range of the function parameter
+    g1 = axes.plot_parametric_curve(f1, color=RED, t_range=[0, 2 * PI])
+    g2 = axes.plot_parametric_curve(f2, color=BLUE, t_range=[-PI, PI])
+
+    self.play(Write(axes), Write(labels))
+
+    self.play(AnimationGroup(Write(g1), Write(g2), lag_ratio=0.5))
+
+    self.play(Unwrite(axes), Unwrite(labels), Unwrite(g1), Unwrite(g2))
+
+
+class Axes3DExample(ThreeDScene):
+  def construct(self):
+    axes = ThreeDAxes()
+
+    x_label = axes.get_x_axis_label(Tex("x"))
+    y_label = axes.get_y_axis_label(Tex("y").shift(1.8))
+
+    # 3D variant of the Dot() object
+    dot = Dot3D()
+
+    # zoom out so we see the axes
+    self.set_camera_orientation(zoom=0.5)
+
+    self.play(FadeIn(axes), FadeIn(dot), FadeIn(x_label), FadeIn(y_label))
+
+    self.wait(0.5)
+
+    # animate the move of the camera to properly see the axes
+    self.move_camera(phi=75 * DEGREES, theta=30*DEGREES, zoom=1, run_time=1.5)
+
+    # built-in updater which begins camera rotation
+    self.begin_ambient_camera_rotation(rate=0.15)
+
+    # one dot for each direction
+    upDot = dot.copy().set_color(RED)
+    rightDot = dot.copy().set_color(BLUE)
+    outDot = dot.copy().set_color(GREEN)
+
+    self.wait(1)
+
+    self.play(
+      upDot.animate.shift(UP),
+      rightDot.animate.shift(RIGHT),
+      outDot.animate.shift(OUT),
+    )
+
+    self.wait(1)
+
+    self.clear()
+
+    cube = Cube(side_length=3, fill_opacity=1)
+    self.begin_ambient_camera_rotation(rate=0.3)
+
+    self.set_camera_orientation(phi=75 * DEGREES, theta=30 * DEGREES)
+
+    self.play(Write(cube), run_time=2)
+
+    self.wait(3)
+
+    self.play(Unwrite(cube), run_time=2)
