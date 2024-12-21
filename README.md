@@ -4,15 +4,14 @@ This project contains all the exercises/mini-projects done while getting convers
 ## Installing Manim
 To install manim, refer to [the installation guide](https://docs.manim.community/en/stable/installation.html)
 
-## Current Mini Projects 
-- Binary Search Algorithm.
-- Random Shuffle Animation.  
+## Current Project
+- A Fly and Two Trains.
 
 ## Run Project Animations
 Right now, all the animation scenes are in one file (to be modularized later)
 To run any of them, type the following command in terminal:
 ```
-manim -pqh darwin.py 
+manim -pqh <filename>
 ```
 then choose from any of the Scenes available.
 
