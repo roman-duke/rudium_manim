@@ -38,6 +38,27 @@ class SimpleTrain(VMobject):
 
     return tyre_group
 
+class GojoFly(SVGMobject):
+  def __init__(self, file_name, color, **kwargs):
+    super().__init__(file_name, **kwargs)
+    self.fly = SVGMobject(file_name).set_color(color)
+    self.add(self.fly)
+
+  # def roam(self, obstacle1: VMobject, obstacle2: VMobject) -> Animation:
+  #   """Allows the fly to roam horizontally, changing direction if a collision is detected"""
+  #   # Add an updater to track the motion of the left and right trains
+  #   # Set the motion of the fly to always shift either to the left or the right, depending
+  #   # on the position of either of the trains
+  #   def __train_pos_updater(obj):
+  #     if obj.get_right()[0] - obstacle2.get_left()[0] <= 0:
+  #       obj.animate.move_to(obstacle2.get_left())
+
+  #     else:
+  #       self.add((Circle(radius=4, color=RED_C)))
+  #       # always_shift(obj, direction=LEFT, rate=.25)
+
+  #   self.fly.add_updater(__train_pos_updater)
+
 class Puzzle(MovingCameraScene):
   def construct(self):
     self.camera.frame.save_state()
@@ -68,7 +89,7 @@ class Puzzle(MovingCameraScene):
     )
 
     # Animate the creation of our fly, Gojo.
-    gojo_fly = SVGMobject('./_2024YT/fly_2trains/assets/gojo_fly.svg').set_color(WHITE).rotate(PI, axis=Y_AXIS)
+    gojo_fly = GojoFly('./_2024YT/fly_2trains/assets/gojo_fly.svg', WHITE).rotate(PI, axis=Y_AXIS)
     self.play(
       Write(gojo_fly),
       gojo_fly.animate.scale(0.15).next_to(left_train, direction=RIGHT, buff=0.1),
@@ -83,6 +104,17 @@ class Puzzle(MovingCameraScene):
     # TODO: complete this simulation
     # Simulate the movement of the trains and the fly (loop a few times)
     def puzzle_demo():
+      # gojo_fly.roam(left_train, right_train)
+      def __train_pos_updater(obj):
+        if obj.get_right()[0] - right_train.get_left()[0] <= 0:
+          obj.move_to(right_train.get_left())
+
+        else:
+          self.add((Circle(radius=4, color=RED_C)))
+        # always_shift(obj, direction=LEFT, rate=.25)
+
+      gojo_fly.add_updater(__train_pos_updater)
+
       self.play(
         AnimationGroup(
           left_train.animate(rate_func=linear).shift(RIGHT * 5 - np.array((left_train.width/2 + .03, 0.0, 0.0))),
@@ -92,6 +124,22 @@ class Puzzle(MovingCameraScene):
       )
 
     puzzle_demo()
+
+    # sq = Square().set_fill(opacity=1)
+    # tri = Triangle()
+    # VGroup(sq, tri).arrange(LEFT)
+
+    # # construct a square which is continuously
+    # # shifted to the right
+    # always_shift(sq, RIGHT, rate=5)
+
+    # self.add(sq)
+    # self.play(tri.animate.set_fill(opacity=1))
+
+    # always_shift(sq, LEFT, rate=10)
+
+    # self.play(tri.animate.set_fill(opacity=1), run_time=5)
+
     self.wait(0.2)
 
     # Day2: TODO: Work on the Easy solution
