@@ -39,25 +39,64 @@ class SimpleTrain(VMobject):
     return tyre_group
 
 class GojoFly(SVGMobject):
-  def __init__(self, file_name, color, **kwargs):
+  def __init__(self, file_name, obstacle1: VMobject, obstacle2: VMobject, color, **kwargs):
     super().__init__(file_name, **kwargs)
     self.fly = SVGMobject(file_name).set_color(color)
     self.add(self.fly)
+    self.obstacle1 = obstacle1
+    self.obstacle2 = obstacle2
+    self.point_tracker = self.get_point_tracker()
+    self.direction = 1
 
-  # def roam(self, obstacle1: VMobject, obstacle2: VMobject) -> Animation:
-  #   """Allows the fly to roam horizontally, changing direction if a collision is detected"""
-  #   # Add an updater to track the motion of the left and right trains
-  #   # Set the motion of the fly to always shift either to the left or the right, depending
-  #   # on the position of either of the trains
-  #   def __train_pos_updater(obj):
-  #     if obj.get_right()[0] - obstacle2.get_left()[0] <= 0:
-  #       obj.animate.move_to(obstacle2.get_left())
+  def get_point_tracker(self):
+    """Gets the current points of the obstacles; we actually need only the x coord"""
+    p1 = self.obstacle1.get_right()[0]
+    p2 = self.obstacle2.get_left()[0]
 
-  #     else:
-  #       self.add((Circle(radius=4, color=RED_C)))
-  #       # always_shift(obj, direction=LEFT, rate=.25)
+    return (p1, p2)
 
-  #   self.fly.add_updater(__train_pos_updater)
+  def update_direction(self, dir: int):
+    """Updates the direction of the fly"""
+    self.direction = dir
+
+  def restore(self):
+    return super().restore()
+
+  def roam(self):
+    """Allows the fly to roam horizontally, changing direction if a collision is detected"""
+    # Add an updater to track the motion of the left and right trains
+    def obstacle_updater(mob: VMobject, dt):
+      if self.direction == 1:
+        if (self.get_point_tracker()[1] - mob.get_right()[0] >= mob.width/2):
+          mob.move_to(
+            np.array((
+              # mob.get_center()[0] + dt * self.get_point_tracker()[1],
+              mob.get_center()[0] + .25,
+              mob.get_center()[1],
+              0
+            )),
+          )
+
+        else:
+          self.fly.flip()
+          self.update_direction(-1)
+
+      elif self.direction == -1:
+        if (mob.get_left()[0] - self.get_point_tracker()[0] >= mob.width/2):
+          mob.move_to(
+            np.array((
+              # mob.get_center()[0] + dt * self.get_point_tracker()[0],
+              mob.get_center()[0] - .25,
+              mob.get_center()[1],
+              0
+            )),
+          )
+
+        else:
+          self.fly.flip()
+          self.update_direction(1)
+
+    self.fly.add_updater(obstacle_updater)
 
 class Puzzle(MovingCameraScene):
   def construct(self):
@@ -89,7 +128,7 @@ class Puzzle(MovingCameraScene):
     )
 
     # Animate the creation of our fly, Gojo.
-    gojo_fly = GojoFly('./_2024YT/fly_2trains/assets/gojo_fly.svg', WHITE).rotate(PI, axis=Y_AXIS)
+    gojo_fly = GojoFly('./_2024YT/fly_2trains/assets/gojo_fly.svg', left_train, right_train, WHITE).rotate(PI, axis=Y_AXIS)
     self.play(
       Write(gojo_fly),
       gojo_fly.animate.scale(0.15).next_to(left_train, direction=RIGHT, buff=0.1),
@@ -101,46 +140,36 @@ class Puzzle(MovingCameraScene):
       gojo_fly.animate.shift(UP * 0.125),
      )
 
-    # TODO: complete this simulation
+    # Save the initial states of the fly and trains
+    left_train.save_state()
+    right_train.save_state()
+
     # Simulate the movement of the trains and the fly (loop a few times)
     def puzzle_demo():
-      # gojo_fly.roam(left_train, right_train)
-      def __train_pos_updater(obj):
-        if obj.get_right()[0] - right_train.get_left()[0] <= 0:
-          obj.move_to(right_train.get_left())
-
-        else:
-          self.add((Circle(radius=4, color=RED_C)))
-        # always_shift(obj, direction=LEFT, rate=.25)
-
-      gojo_fly.add_updater(__train_pos_updater)
-
+      gojo_fly.roam()
       self.play(
         AnimationGroup(
           left_train.animate(rate_func=linear).shift(RIGHT * 5 - np.array((left_train.width/2 + .03, 0.0, 0.0))),
           right_train.animate(rate_func=linear).shift(LEFT * 5 + np.array((right_train.width/2 + .03, 0.0, 0.0))),
-          run_time=5,
+          run_time=10,
         )
       )
+      self.wait(0.3)
+      self.remove(gojo_fly)
 
-    puzzle_demo()
+      # Reset the fly and trains to their initial positions
+      self.play(
+        Restore(left_train),
+        Restore(right_train),
+      )
 
-    # sq = Square().set_fill(opacity=1)
-    # tri = Triangle()
-    # VGroup(sq, tri).arrange(LEFT)
+      self.wait(0.3)
 
-    # # construct a square which is continuously
-    # # shifted to the right
-    # always_shift(sq, RIGHT, rate=5)
+      self.add(gojo_fly)
 
-    # self.add(sq)
-    # self.play(tri.animate.set_fill(opacity=1))
+    for _ in range(3):
+      puzzle_demo()
 
-    # always_shift(sq, LEFT, rate=10)
-
-    # self.play(tri.animate.set_fill(opacity=1), run_time=5)
-
-    self.wait(0.2)
 
     # Day2: TODO: Work on the Easy solution
 
@@ -153,7 +182,6 @@ class Puzzle(MovingCameraScene):
     # Day 6: TODO: Finishihng touches and edit the animations
 
     # Day 7: TODO: Edit it Adobe After EFfects
-
 
     #---------------- EASY SOLUTION ----------------#
     # Save the state of the fly and remove it from the scene
