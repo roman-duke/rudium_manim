@@ -99,10 +99,16 @@ class GojoFly(SVGMobject):
     self.fly.add_updater(obstacle_updater)
 
 class Puzzle(MovingCameraScene):
-  def construct(self):
-    self.camera.frame.save_state()
 
-    #---------- Animate the creation of the required mobjects onto the scene. -----------#
+  CONFIG = {
+    "easy_solution_font": "Times New Roman",
+    "hard_solution_font": "Brush Script MT",
+  }
+
+  def construct(self):
+    # self.camera.frame.save_state()
+
+    #========== ANIMATE THE CREATION OF THE REQUIRED MOBJECTS ONTO THE SCENE. ==========#
     track = Line(start=LEFT*12, end=RIGHT*12).shift(DOWN*2)
 
     self.play(Write(track))
@@ -143,8 +149,10 @@ class Puzzle(MovingCameraScene):
     # Save the initial states of the fly and trains
     left_train.save_state()
     right_train.save_state()
+    #======================================================================================#
 
-    # Simulate the movement of the trains and the fly (loop a few times)
+
+    #========= Simulate the movement of the trains and the fly (loop a few times)  ========#
     def puzzle_demo():
       gojo_fly.roam()
       self.play(
@@ -155,7 +163,6 @@ class Puzzle(MovingCameraScene):
         )
       )
       self.wait(0.3)
-      self.remove(gojo_fly)
 
       # Reset the fly and trains to their initial positions
       self.play(
@@ -165,14 +172,31 @@ class Puzzle(MovingCameraScene):
 
       self.wait(0.3)
 
-      self.add(gojo_fly)
+    # for _ in range():
+    #   puzzle_demo()
+    #======================================================================================#
 
-    for _ in range(3):
-      puzzle_demo()
+    #================================== INTRO SCENE =======================================#
+    # Remove all the mobjects from the current scene
+    self.clear()
 
+    # Fade in the "Easy Solution" text
+    easy_title = VGroup()
+    easy_text = Text("The Easy Solution", font="Times New Roman")
+    easy_border = Rectangle(width=easy_text.width * 1.25, height=easy_text.height * 2.5)
+    easy_title.add(easy_text, easy_border)
 
-    # Day2: TODO: Work on the Easy solution
+    self.play(
+      AnimationGroup(
+        Write(easy_title),
+        lag_ratio=.75
+      )
+    )
 
+    self.play(
+      FadeOut(easy_title)
+    )
+    
     # Day 3: TODO: Work on the Hard Solution
 
     # Day 4: TODO: Record voiceover and work on half of the more complex solution
