@@ -196,7 +196,45 @@ class Puzzle(MovingCameraScene):
     self.play(
       FadeOut(easy_title)
     )
-    
+
+    # Add the fly and trains back to the scene
+    self.add(gojo_fly, left_train, right_train, track)
+    self.wait(0.5)
+
+    # Add a line at the center of the scene (the collision point)
+    collision_demarcation = Line(start=UP, end=DOWN * 2)
+    point_one = Dot(UP, radius=.075)
+    point_two = Dot(DOWN*2, radius=.075)
+    points_group = VGroup(point_one, point_two)
+    self.play(
+      AnimationGroup(
+        Write(points_group),
+        Write(collision_demarcation),
+        lag_ratio=1
+      )
+    )
+
+    # zoom in on the fly and then fade out, with a flash
+    self.camera.frame.save_state()
+
+    self.play(
+      AnimationGroup(
+        AnimationGroup(
+          FocusOn(gojo_fly),
+          self.camera.frame.animate.move_to(gojo_fly).set_height(gojo_fly.height * 5),
+          lag_ratio=.5
+        ),
+        AnimationGroup(
+          FadeOut(gojo_fly),
+          Flash(gojo_fly, num_lines=50, line_length=0.15, line_stroke_wdith=1, color=WHITE),
+          lag_ratio=.5
+        ),
+        lag_ratio=.75
+      )
+    )
+
+    self.play(self.camera.frame.animate.restore())
+
     # Day 3: TODO: Work on the Hard Solution
 
     # Day 4: TODO: Record voiceover and work on half of the more complex solution
