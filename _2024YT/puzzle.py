@@ -98,6 +98,20 @@ class GojoFly(SVGMobject):
 
     self.fly.add_updater(obstacle_updater)
 
+# Custom Count Animation
+class Count(Animation):
+  def __init__(self, number: DecimalNumber, start: float, end: float, **kwargs) -> None:
+    # Pass number as the mobject of the animation
+    super().__init__(number,  **kwargs)
+    # Set start and end
+    self.start = start
+    self.end = end
+
+  def interpolate_mobject(self, alpha: float) -> None:
+    # Set value of DecimalNumber according to alpha
+    value = self.start + (alpha * (self.end - self.start))
+    self.mobject.set_value(value)
+
 class Puzzle(MovingCameraScene):
 
   CONFIG = {
@@ -106,7 +120,7 @@ class Puzzle(MovingCameraScene):
   }
 
   def construct(self):
-    # self.camera.frame.save_state()
+    self.camera.frame.save_state()
 
     #========== ANIMATE THE CREATION OF THE REQUIRED MOBJECTS ONTO THE SCENE. ==========#
     track = Line(start=LEFT*12, end=RIGHT*12).shift(DOWN*2)
@@ -305,8 +319,8 @@ class Puzzle(MovingCameraScene):
     right_train_distance_covered.add_updater(right_train_distance_updater)
 
     # Add a line at the center of the scene (the collision point)
-    collision_demarcation = Line(start=UP, end=DOWN * 2)
-    point_one = Dot(UP, radius=.075)
+    collision_demarcation = Line(start=ORIGIN, end=DOWN * 2)
+    point_one = Dot(ORIGIN, radius=.075)
     point_two = Dot(DOWN*2, radius=.075)
     points_group = VGroup(point_one, point_two)
 
@@ -328,6 +342,67 @@ class Puzzle(MovingCameraScene):
     )
     self.wait(0.3)
 
+    #===================== Animation of the Easy Solution at the top right of the screen ========================#
+    self.camera.frame.save_state()
+    # Create the bounding box for the calculation at the right hand of the screen
+    easy_calculation_bounding_box = Square(side_length=5).move_to(UR * 4)
+
+    easy_method_title = Title("Distance-Speed-Time Relationship")\
+      .scale_to_fit_width(easy_calculation_bounding_box.width * 0.85)\
+      .move_to(easy_calculation_bounding_box)\
+      .align_to(easy_calculation_bounding_box, direction=UP)\
+      .shift(DOWN*.15)
+
+    distance_formula_text = MathTex(r"distance = speed \times time").move_to(easy_calculation_bounding_box).scale(.75)
+    distance_formula_symbol = MathTex(r"x = v \times t").move_to(easy_calculation_bounding_box).scale(.75)
+
+    self.play(
+      self.camera.frame.animate.set_height(
+        easy_calculation_bounding_box.height * 1.2
+      )
+    )
+
+    self.play(
+      Write(easy_calculation_bounding_box),
+      Write(easy_method_title),
+      self.camera.frame.animate.move_to(easy_calculation_bounding_box)
+    )
+
+    # Write the distance formula
+    self.play(
+      Write(distance_formula_text)
+    )
+
+    self.play(
+      Transform(distance_formula_text, distance_formula_symbol)
+    )
+
+    self.play(
+      distance_formula_text.animate.shift(UP * 1.5),
+    )
+
+    time_formula_symbol = MathTex(r"t = \frac{x}{v}").move_to(distance_formula_text.get_center()).scale(.75)
+
+    time_taken_substituted = MathTex(r"\Rightarrow t = \frac{100 km}{50 km/hr}").move_to(easy_calculation_bounding_box).scale(.75)
+
+    time_taken = MathTex(r"t = 2 hrs").next_to(time_taken_substituted, direction=DOWN).shift(DOWN * .5).scale(.75)
+
+    self.play(Transform(distance_formula_text, time_formula_symbol))
+    self.wait(0.5)
+
+    self.play(
+      Write(time_taken_substituted)
+    )
+
+    self.play(
+      Write(time_taken)
+    )
+
+    self.play(
+      self.camera.frame.animate.restore()
+    )
+    #===================================================================================================#
+
     # Day 3: TODO: Work on the Hard Solution
 
     # Day 4: TODO: Record voiceover and work on half of the more complex solution
@@ -343,17 +418,3 @@ class Puzzle(MovingCameraScene):
     # gojo_fly.save_state()
 
     # self.play(Unwrite(gojo_fly))
-
-# Custom Count Animation
-class Count(Animation):
-  def __init__(self, number: DecimalNumber, start: float, end: float, **kwargs) -> None:
-    # Pass number as the mobject of the animation
-    super().__init__(number,  **kwargs)
-    # Set start and end
-    self.start = start
-    self.end = end
-
-  def interpolate_mobject(self, alpha: float) -> None:
-    # Set value of DecimalNumber according to alpha
-    value = self.start + (alpha * (self.end - self.start))
-    self.mobject.set_value(value)
