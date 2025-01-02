@@ -257,19 +257,6 @@ class Puzzle(MovingCameraScene):
     # elapsed_time.add_updater(lambda m, dt: m.set_value(m.get_value() + 0.2))
     # =======================================================================================================================================#
 
-    def distance_updater(mob: DecimalNumber):
-      # Initial distance between both trains
-      initial_train_distance = right_train.saved_state.get_left()[0] - left_train.saved_state.get_right()[0]
-
-      # Get the distance between the left and right trains and then scale it up to the magnitude of the initial distance
-      scaled_distance = ((right_train.get_left()[0] - left_train.get_right()[0]) / (initial_train_distance) * 100) - 1
-      mob.set_value(scaled_distance)
-
-      mob.next_to(distance_brace, direction=DOWN, buff=.2)
-
-    def braces_updater(mob: BraceBetweenPoints):
-      mob.become(BraceBetweenPoints(left_train.get_right(), right_train.get_left())).next_to(track, direction=DOWN, buff=.2)
-
     self.play(
       Create(distance_brace),
       Write(distance_between_trains),
@@ -277,8 +264,58 @@ class Puzzle(MovingCameraScene):
       Write(right_train_velocity_annot)
     )
 
-    distance_between_trains.add_updater(distance_updater)
-    distance_brace.add_updater(braces_updater)
+    self.play(
+      Uncreate(distance_brace),
+      Unwrite(distance_between_trains),
+      run_time=.75
+    )
+
+    # Display two braces that track the distance covered of the left and right trains
+    initial_left_train_pos = left_train.saved_state.get_right()
+    initial_right_train_pos = right_train.saved_state.get_left()
+
+    left_train_brace = BraceBetweenPoints(initial_left_train_pos, (initial_left_train_pos[0] + .15, initial_left_train_pos[1], initial_left_train_pos[2])).shift(DOWN*.25).scale(.85)
+    right_train_brace = BraceBetweenPoints((initial_right_train_pos[0] - .15, initial_right_train_pos[1], initial_right_train_pos[2]), initial_right_train_pos).shift(DOWN*.25).scale(.85)
+    left_train_distance_covered = DecimalNumber(number=0, num_decimal_places=0, unit="km", font_size=24).next_to(left_train_brace, direction=DOWN, buff=.1)
+    right_train_distance_covered = DecimalNumber(number=0, num_decimal_places=0, unit="km", font_size=24).next_to(right_train_brace, direction=DOWN, buff=.1)
+
+    def left_train_distance_updater(mob: DecimalNumber):
+      # Get the distance between the starting pos. and the current pos. of the left train
+      scaled_left_distance = abs((left_train.get_right()[0] - initial_left_train_pos[0]) / (initial_left_train_pos[0]) * 50)
+      mob.set_value(scaled_left_distance)
+      mob.next_to(left_train_brace, direction=DOWN)
+
+      # # Update the brace in the process too
+      # left_train_brace.become(BraceBetweenPoints(initial_left_train_pos, left_train.get_right())).next_to(track, direction=DOWN, buff=.2)
+
+    def right_train_distance_updater(mob: DecimalNumber):
+      # Get the distance between the starting pos. and the current pos. of the right train
+      scaled_right_distance = abs((right_train.get_left()[0] - initial_right_train_pos[0]) / (initial_right_train_pos[0]) * 50)
+      mob.set_value(scaled_right_distance)
+      mob.next_to(right_train_brace, direction=DOWN)
+
+      # # Update the brace in the process too
+      # right_train_brace.become(BraceBetweenPoints(initial_right_train_pos, right_train.get_left())).next_to(track, direction=DOWN, buff=.2)
+
+    def left_train_brace_updater(mob: BraceBetweenPoints):
+      # Update the brace in the process too
+      mob.become(BraceBetweenPoints(initial_left_train_pos, left_train.get_right())).shift(DOWN*.25).scale(.85)
+
+    def right_train_brace_updater(mob: BraceBetweenPoints):
+      # Update the brace in the process too
+      mob.become(BraceBetweenPoints(right_train.get_left(), initial_right_train_pos)).shift(DOWN*.25).scale(.85)
+
+    self.play(
+      Create(left_train_brace),
+      Create(right_train_brace),
+      Write(left_train_distance_covered),
+      Write(right_train_distance_covered),
+    )
+
+    left_train_brace.add_updater(left_train_brace_updater)
+    right_train_brace.add_updater(right_train_brace_updater)
+    left_train_distance_covered.add_updater(left_train_distance_updater)
+    right_train_distance_covered.add_updater(right_train_distance_updater)
 
     self.play(
       AnimationGroup(
