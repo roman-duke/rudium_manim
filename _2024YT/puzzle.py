@@ -222,19 +222,6 @@ class Puzzle(MovingCameraScene):
 
     self.play(self.camera.frame.animate.restore())
 
-    # Add a line at the center of the scene (the collision point)
-    # collision_demarcation = Line(start=UP, end=DOWN * 2)
-    # point_one = Dot(UP, radius=.075)
-    # point_two = Dot(DOWN*2, radius=.075)
-    # points_group = VGroup(point_one, point_two)
-    # self.play(
-    #   AnimationGroup(
-    #     Write(points_group),
-    #     Write(collision_demarcation),
-    #     lag_ratio=1
-    #   )
-    # )
-
     # Using a brace, show the initial distance between the two trains, then add an updater to track the changes
     distance_brace = BraceBetweenPoints(left_train.get_right(), right_train.get_left()).next_to(track, direction=DOWN, buff=.2)
     distance_between_trains = DecimalNumber(number=100, num_decimal_places=0, font_size=30).next_to(distance_brace, direction=DOWN, buff=.2)
@@ -317,12 +304,26 @@ class Puzzle(MovingCameraScene):
     left_train_distance_covered.add_updater(left_train_distance_updater)
     right_train_distance_covered.add_updater(right_train_distance_updater)
 
+    # Add a line at the center of the scene (the collision point)
+    collision_demarcation = Line(start=UP, end=DOWN * 2)
+    point_one = Dot(UP, radius=.075)
+    point_two = Dot(DOWN*2, radius=.075)
+    points_group = VGroup(point_one, point_two)
+
     self.play(
       AnimationGroup(
-        left_train.animate(rate_func=linear).shift(RIGHT * 5 - np.array((left_train.width/2 + .03, 0.0, 0.0))),
-        right_train.animate(rate_func=linear).shift(LEFT * 5 + np.array((right_train.width/2 + .03, 0.0, 0.0))),
-        # Count(elapsed_time, 0, 2, rate_functions=linear),
-        run_time=10,
+        AnimationGroup(
+          left_train.animate(rate_func=linear).shift(RIGHT * 5 - np.array((left_train.width/2 + .03, 0.0, 0.0))),
+          right_train.animate(rate_func=linear).shift(LEFT * 5 + np.array((right_train.width/2 + .03, 0.0, 0.0))),
+          # Count(elapsed_time, 0, 2, rate_functions=linear),
+          run_time=10,
+        ),
+        AnimationGroup(
+          Write(points_group),
+          Write(collision_demarcation),
+          lag_ratio=1
+        ),
+        lag_ratio=.75
       )
     )
     self.wait(0.3)
