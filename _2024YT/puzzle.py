@@ -353,8 +353,8 @@ class Puzzle(MovingCameraScene):
       .align_to(easy_calculation_bounding_box, direction=UP)\
       .shift(DOWN*.15)
 
-    distance_formula_text = MathTex(r"distance = speed \times time").move_to(easy_calculation_bounding_box).scale(.75)
-    distance_formula_symbol = MathTex(r"x = v \times t").move_to(easy_calculation_bounding_box).scale(.75)
+    train_distance_formula_text = MathTex(r"distance = speed \times time").move_to(easy_calculation_bounding_box).scale(.75)
+    train_distance_formula_symbol = MathTex(r"d_{\text{train}} = v_{\text{train}} \times t").move_to(easy_calculation_bounding_box).scale(.75)
 
     self.play(
       self.camera.frame.animate.set_height(
@@ -370,24 +370,37 @@ class Puzzle(MovingCameraScene):
 
     # Write the distance formula
     self.play(
-      Write(distance_formula_text)
+      Write(train_distance_formula_text)
     )
 
     self.play(
-      Transform(distance_formula_text, distance_formula_symbol)
+      Transform(train_distance_formula_text, train_distance_formula_symbol)
     )
 
     self.play(
-      distance_formula_text.animate.shift(UP * 1.5),
+      train_distance_formula_text.animate.shift(UP * 1.5),
     )
 
-    time_formula_symbol = MathTex(r"t = \frac{x}{v}").move_to(distance_formula_text.get_center()).scale(.75)
+    time_formula_symbol = MathTex(r"t = \frac{d_{\text{train}}}{v_{\text{train}}}").move_to(train_distance_formula_text.get_center()).scale(.75)
 
-    time_taken_substituted = MathTex(r"\Rightarrow t = \frac{100 km}{50 km/hr}").move_to(easy_calculation_bounding_box).scale(.75)
+    time_taken_substituted = MathTex(r"\Rightarrow t = \frac{50 km}{50 km/hr}").move_to(easy_calculation_bounding_box).scale(.75)
 
-    time_taken = MathTex(r"t = 2 hrs").next_to(time_taken_substituted, direction=DOWN).shift(DOWN * .5).scale(.75)
+    time_taken = MathTex(r"t = 1 hr").next_to(time_taken_substituted, direction=DOWN).shift(DOWN * .5).scale(.75)
 
-    self.play(Transform(distance_formula_text, time_formula_symbol))
+    fly_distance_formula_symbol = MathTex(r"d_{\text{fly}} = v_{\text{fly}} \times time")\
+        .move_to(train_distance_formula_text.get_center())\
+        .scale(.75)
+
+    fly_distance_covered_substituted = MathTex(r"\Rightarrow d_{\text{fly}} = 100km/hr \times 1hr")\
+      .move_to(easy_calculation_bounding_box)\
+      .scale(.75)
+
+    fly_distance_covered = MathTex(r"d_{\text{fly}} = 100km")\
+      .next_to(fly_distance_covered_substituted, direction=DOWN)\
+      .shift(DOWN * .5)\
+      .scale(.75)
+
+    self.play(Transform(train_distance_formula_text, time_formula_symbol))
     self.wait(0.5)
 
     self.play(
@@ -395,7 +408,27 @@ class Puzzle(MovingCameraScene):
     )
 
     self.play(
-      Write(time_taken)
+      AnimationGroup(
+        Write(time_taken),
+        Circumscribe(time_taken),
+        lag_ratio=1
+      )
+    )
+
+    self.play(
+      FadeOut(time_taken_substituted, time_taken)
+    )
+
+    self.remove(time_taken_substituted, time_taken)
+
+    # Calculation for the actual distance covered by the fly
+    self.play(
+      AnimationGroup(
+        Transform(train_distance_formula_text, fly_distance_formula_symbol),
+        Write(fly_distance_covered_substituted),
+        Write(fly_distance_covered),
+        lag_ratio=1
+      )
     )
 
     self.play(
