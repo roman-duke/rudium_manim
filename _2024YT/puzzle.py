@@ -122,7 +122,7 @@ class Puzzle(MovingCameraScene):
   def construct(self):
     self.camera.frame.save_state()
 
-    #========== ANIMATE THE CREATION OF THE REQUIRED MOBJECTS ONTO THE SCENE. ==========#
+    # #========== ANIMATE THE CREATION OF THE REQUIRED MOBJECTS ONTO THE SCENE. ==========#
     track = Line(start=LEFT*12, end=RIGHT*12).shift(DOWN*2)
 
     self.play(Write(track))
@@ -190,13 +190,13 @@ class Puzzle(MovingCameraScene):
     #   puzzle_demo()
     #======================================================================================#
 
-    #================================== INTRO SCENE =======================================#
+    #============================== EASY SOLUTION SCENE ===================================#
     # Remove all the mobjects from the current scene
     self.clear()
 
     # Fade in the "Easy Solution" text
     easy_title = VGroup()
-    easy_text = Text("The Easy Solution", font="Times New Roman")
+    easy_text = Tex("The Easy Solution", font="Times New Roman")
     easy_border = Rectangle(width=easy_text.width * 1.25, height=easy_text.height * 2.5)
     easy_title.add(easy_text, easy_border)
 
@@ -240,7 +240,7 @@ class Puzzle(MovingCameraScene):
     distance_brace = BraceBetweenPoints(left_train.get_right(), right_train.get_left()).next_to(track, direction=DOWN, buff=.2)
     distance_between_trains = DecimalNumber(number=100, num_decimal_places=0, font_size=30).next_to(distance_brace, direction=DOWN, buff=.2)
 
-    # Add a vector to indicate the speed of each of the trains
+    # # Add a vector to indicate the speed of each of the trains
     left_train_velocity_vector = Arrow(start=LEFT, end=RIGHT).next_to(left_train, direction=UP, buff=.2).scale(.75, True)
     right_train_velocity_vector = Arrow(start=RIGHT, end=LEFT).next_to(right_train, direction=UP, buff=.2).scale(.75, True)
 
@@ -250,13 +250,13 @@ class Puzzle(MovingCameraScene):
     left_train_velocity_annot = VGroup(left_train_velocity_vector, left_train_velocity_label)
     right_train_velocity_annot = VGroup(right_train_velocity_vector, right_train_velocity_label)
 
-    # TODO: Use this at the end of the Easy Solution Scene
-    # =======================================================================================================================================#
-    # Show the time elapsed
-    # time_elapsed_text = Tex('t = ').move_to(UP * 2)
-    # elapsed_time = DecimalNumber(number=0, num_decimal_places=2, unit="hr").next_to(time_elapsed_text, RIGHT)
-    # elapsed_time.add_updater(lambda m, dt: m.set_value(m.get_value() + 0.2))
-    # =======================================================================================================================================#
+    # # TODO: Use this at the end of the Easy Solution Scene
+    # # =======================================================================================================================================#
+    # # Show the time elapsed
+    # # time_elapsed_text = Tex('t = ').move_to(UP * 2)
+    # # elapsed_time = DecimalNumber(number=0, num_decimal_places=2, unit="hr").next_to(time_elapsed_text, RIGHT)
+    # # elapsed_time.add_updater(lambda m, dt: m.set_value(m.get_value() + 0.2))
+    # # =======================================================================================================================================#
 
     self.play(
       Create(distance_brace),
@@ -434,7 +434,94 @@ class Puzzle(MovingCameraScene):
     self.play(
       self.camera.frame.animate.restore()
     )
+
+    self.play(
+      FadeOut(
+        track,
+        left_train,
+        right_train,
+        collision_demarcation,
+      )
+    )
     #===================================================================================================#
+
+    #============================= THE "NOT SO EASY" SOLUTION SCENE ====================================#
+    medium_title = VGroup()
+    medium_text = Text(r'The "Not So Easy" Solution', font="Brush Script MT")
+    medium_border = Rectangle(width=medium_text.width * 1.25, height=medium_text.height * 2.5)
+    medium_title.add(medium_text, medium_border)
+
+    self.play(
+      AnimationGroup(
+        Write(medium_title),
+        lag_ratio=.75
+      )
+    )
+
+    self.play(
+      FadeOut(medium_title)
+    )
+
+    self.play(
+      self.camera.frame.animate.set_width(track.width * .95),
+      FadeIn(track.shift(DOWN).set_color("#6a6a6a"))
+    )
+
+    # Animate the creation of the complex trains.
+    left_complex_train = SVGMobject('./_2024YT/fly_2trains/assets/complex_train.svg')\
+      .scale(0.2)\
+      .rotate(PI, UP)\
+      .set_color(WHITE)\
+      .next_to(track, direction=UP, buff=0.02)\
+
+    right_complex_train = SVGMobject('./_2024YT/fly_2trains/assets/complex_train.svg')\
+      .scale(0.2)\
+      .set_color(WHITE)\
+      .shift(RIGHT * 5)\
+      .next_to(track, direction=UP, buff=0.02)\
+
+    self.play(
+      AnimationGroup(
+        Write(left_complex_train.shift(LEFT * left_complex_train.width * 1.6)),
+        Write(right_complex_train.shift(RIGHT * right_complex_train.width * 1.6)),
+        lag_ratio=.75
+      ),
+      run_time=2
+    )
+
+    # Set the initital position of the Gojo Fly to be at the left complex train, then show the creation
+    gojo_fly.scale(0.15)\
+      .next_to(left_complex_train, direction=RIGHT, buff=0.025)
+
+    self.camera.frame.save_state()
+
+    self.play(
+      AnimationGroup(
+        self.camera.frame.animate.move_to(gojo_fly).set_height(gojo_fly.height * 3),
+        Write(gojo_fly),
+        lag_ratio=1
+      )
+    )
+
+    # TODO: Create a method that allows the fly to oscillate in place.
+    self.play(
+      self.camera.frame.animate.restore()
+    )
+
+    left_train_velocity_annot.next_to(left_complex_train, direction=UP)
+    right_train_velocity_annot.next_to(right_complex_train, direction=UP)
+    left_train_velocity_vector.scale(1.33 * 0.5, True)
+    right_train_velocity_vector.scale(1.33 * 0.5, True)
+
+    gojo_fly_velocity_vector = Arrow(start=LEFT, end=RIGHT).next_to(gojo_fly, direction=UP, buff=.1).scale(.75, True)
+    gojo_fly_velocity_label = MathTex("v_1 = 100 \, \mathrm{km/hr}").next_to(gojo_fly_velocity_vector, direction=UP, buff=.1).scale(.5)
+    gojo_fly_velocity_annot = VGroup(gojo_fly_velocity_vector, gojo_fly_velocity_label)
+
+    self.play(
+      Write(gojo_fly_velocity_annot),
+      Write(left_train_velocity_annot),
+      Write(right_train_velocity_annot)
+    )
 
     # Day 3: TODO: Work on the Hard Solution
 
