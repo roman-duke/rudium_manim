@@ -510,7 +510,7 @@ class Puzzle(MovingCameraScene):
     self.play(
       AnimationGroup(
         self.camera.frame.animate.move_to(gojo_fly).set_height(gojo_fly.height * 3),
-        Create(gojo_fly),
+        Write(gojo_fly),
         lag_ratio=1
       )
     )
@@ -566,14 +566,16 @@ class Puzzle(MovingCameraScene):
     )
 
     #----------------------------- The animation of the first two leg trips -------------------------------------------------#
-    gojo_fly.roam(left_complex_train, right_complex_train, infiniteRoam=False)
+    # TODO IN 3 hours: Instead of hard coding it this way, you can set an updater for the trains and just set them in motion, they stop moving the moment the fly collides with any of them
+    # To ensure that the velocity of the trains is twice that of the fly, update that in the updater function
+    # gojo_fly.roam(left_complex_train, right_complex_train, infiniteRoam=False)
 
-    self.play(
-      left_complex_train.animate(rate_func=linear).shift((RIGHT * left_complex_train.width * 1.6 - np.array((left_complex_train.width/2 - 0.05, 0.0, 0.0)))/2),
-      right_complex_train.animate(rate_func=linear).shift((LEFT * right_complex_train.width * 1.6 + np.array((right_complex_train.width/2 - 0.05, 0.0, 0.0)))/2),
-      # gojo_fly.animate(rate_func=linear).move_to((right_complex_train.get_left()[0] - (right_complex_train.width * 0.5), right_complex_train.get_left()[1], right_complex_train.get_left()[2])),
-      run_time=5,
-    )
+    # self.play(
+    #   left_complex_train.animate(rate_func=linear).shift((RIGHT * left_complex_train.width * 1.6 - np.array((left_complex_train.width/2 - 0.05, 0.0, 0.0)))/2),
+    #   right_complex_train.animate(rate_func=linear).shift((LEFT * right_complex_train.width * 1.6 + np.array((right_complex_train.width/2 - 0.05, 0.0, 0.0)))/2),
+    #   # gojo_fly.animate(rate_func=linear).move_to((right_complex_train.get_left()[0] - (right_complex_train.width * 0.5), right_complex_train.get_left()[1], right_complex_train.get_left()[2])),
+    #   run_time=5,
+    # )
 
     # def fly_leg_journey(leg: int):
 
