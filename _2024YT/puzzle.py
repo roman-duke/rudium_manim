@@ -485,11 +485,13 @@ class Puzzle(MovingCameraScene):
       .rotate(PI, UP)\
       .set_color(WHITE)\
       .next_to(track, direction=UP, buff=0.02)\
+      .set_z_index(2)
 
     right_complex_train = SVGMobject('./_2024YT/fly_2trains/assets/complex_train.svg')\
       .scale(0.2)\
       .set_color(WHITE)\
       .next_to(track, direction=UP, buff=0.02)\
+      .set_z_index(2)
 
     self.play(
       AnimationGroup(
