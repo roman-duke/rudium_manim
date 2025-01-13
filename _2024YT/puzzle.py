@@ -101,6 +101,30 @@ class GojoFly(SVGMobject):
   def clear_all_updaters(self):
     self.fly.clear_updaters()
 
+class ComplexTrain(SVGMobject):
+  def __init__(self, file_name, color, direction, **kwargs):
+    super().__init__(file_name, **kwargs)
+    self.train = SVGMobject(file_name).set_color(color)
+    self.direction = direction
+    self.add(self.train)
+
+  def roam_before_fly_contact(self, fly: VMobject):
+    """Allows the train to basically keep moving till it comes in contact with the fly"""
+    def train_updater(mob: VMobject):
+      train_relevant_extreme = mob.get_right() if self.driection == 1 else mob.get_left()
+      buff_contact = -fly.width/2 if self.driection == 1 else fly.width/2
+
+      if (train_relevant_extreme[0] - (fly.get_center()[0] + buff_contact) <= 0):
+        mob.move_to((
+          np.array((
+            mob.get_center()[0] + .125 * self.driection,
+            mob.get_center()[1],
+            0
+          ))
+        ))
+
+      self.train.add_updater(train_updater)
+
 # Custom Count Animation
 class Count(Animation):
   def __init__(self, number: DecimalNumber, start: float, end: float, **kwargs) -> None:
@@ -480,16 +504,14 @@ class Puzzle(MovingCameraScene):
     )
 
     # Animate the creation of the complex trains.
-    left_complex_train = SVGMobject('./_2024YT/fly_2trains/assets/complex_train.svg')\
+    left_complex_train = ComplexTrain('./_2024YT/fly_2trains/assets/complex_train.svg', WHITE, direction=1)\
       .scale(0.2)\
       .rotate(PI, UP)\
-      .set_color(WHITE)\
       .next_to(track, direction=UP, buff=0.02)\
       .set_z_index(2)
 
-    right_complex_train = SVGMobject('./_2024YT/fly_2trains/assets/complex_train.svg')\
+    right_complex_train = ComplexTrain('./_2024YT/fly_2trains/assets/complex_train.svg', WHITE, direction=-1)\
       .scale(0.2)\
-      .set_color(WHITE)\
       .next_to(track, direction=UP, buff=0.02)\
       .set_z_index(2)
 
