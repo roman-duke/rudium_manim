@@ -68,7 +68,7 @@ class GojoFly(SVGMobject):
           mob.move_to(
             np.array((
               # mob.get_center()[0] + dt * self.get_point_tracker()[1],
-              mob.get_center()[0] + .25,
+              mob.get_center()[0] + .0625,
               mob.get_center()[1],
               0
             )),
@@ -85,7 +85,7 @@ class GojoFly(SVGMobject):
           mob.move_to(
             np.array((
               # mob.get_center()[0] + dt * self.get_point_tracker()[0],
-              mob.get_center()[0] - .25,
+              mob.get_center()[0] - .0625,
               mob.get_center()[1],
               0
             )),
@@ -108,22 +108,23 @@ class ComplexTrain(SVGMobject):
     self.direction = direction
     self.add(self.train)
 
-  def roam_before_fly_contact(self, fly: VMobject):
+  def roam_before_fly_contact(self, fly: GojoFly):
     """Allows the train to basically keep moving till it comes in contact with the fly"""
     def train_updater(mob: VMobject):
-      train_relevant_extreme = mob.get_right() if self.driection == 1 else mob.get_left()
-      buff_contact = -fly.width/2 if self.driection == 1 else fly.width/2
+      train_relevant_extreme = mob.get_right() if self.direction == 1 else mob.get_left()
+      fly_center = fly.get_center()
+      buff_contact = -fly.width/2 if self.direction == 1 else fly.width/2
 
-      if (train_relevant_extreme[0] - (fly.get_center()[0] + buff_contact) <= 0):
+      if ((train_relevant_extreme[0] - fly_center[0]) * self.direction <= self.direction * buff_contact):
         mob.move_to((
           np.array((
-            mob.get_center()[0] + .125 * self.driection,
+            mob.get_center()[0] + .03125 * self.direction,
             mob.get_center()[1],
             0
           ))
         ))
 
-      self.train.add_updater(train_updater)
+    self.train.add_updater(train_updater)
 
 # Custom Count Animation
 class Count(Animation):
@@ -590,7 +591,14 @@ class Puzzle(MovingCameraScene):
     #----------------------------- The animation of the first two leg trips -------------------------------------------------#
     # TODO IN 3 hours: Instead of hard coding it this way, you can set an updater for the trains and just set them in motion, they stop moving the moment the fly collides with any of them
     # To ensure that the velocity of the trains is twice that of the fly, update that in the updater function
-    # gojo_fly.roam(left_complex_train, right_complex_train, infiniteRoam=False)
+    gojo_fly.roam(left_complex_train, right_complex_train, infiniteRoam=False)
+    left_complex_train.roam_before_fly_contact(gojo_fly.fly)
+    right_complex_train.roam_before_fly_contact(gojo_fly.fly)
+
+    self.play(
+      self.camera.frame.animate.scale(1),
+      run_time=15
+    )
 
     # self.play(
     #   left_complex_train.animate(rate_func=linear).shift((RIGHT * left_complex_train.width * 1.6 - np.array((left_complex_train.width/2 - 0.05, 0.0, 0.0)))/2),
