@@ -45,56 +45,58 @@ class GojoFly(SVGMobject):
     self.add(self.fly)
     self.direction = 1
 
-  def get_point_tracker(self, obstacle1: VMobject, obstacle2: VMobject):
-    """Gets the current points of the obstacles; we actually need only the x coord"""
+  def get_obstacle_point_tracker(self, obstacle1: VMobject, obstacle2: VMobject) -> dict[int, float]:
+    """Gets the current points of the obstacles we actually need only the x coord"""
     p1 = obstacle1.get_right()[0]
     p2 = obstacle2.get_left()[0]
 
-    return (p1, p2)
+    return {
+      -1: p1,
+      1: p2
+    }
+
+  def get_relevant_extreme(self):
+    """Gets the relevant coord of the fly mobject"""
+    p1 = self.fly.get_left()[0]
+    p2 = self.fly.get_right()[0]
+
+    return {
+      -1: p1,
+      1: p2
+    }
 
   def update_direction(self, dir: int):
     """Updates the direction of the fly"""
     self.direction = dir
 
-  def restore(self):
+  def restore_position(self):
     return super().restore()
 
   def roam(self, ob1: VMobject, ob2: VMobject, infiniteRoam=True):
     """Allows the fly to roam horizontally, changing direction if a collision is detected"""
     # Add an updater to track the motion of the left and right trains
     def obstacle_updater(mob: VMobject, dt):
-      if self.direction == 1:
-        if (self.get_point_tracker(ob1, ob2)[1] - mob.get_right()[0] >= mob.width/2):
-          mob.move_to(
-            np.array((
-              # mob.get_center()[0] + dt * self.get_point_tracker()[1],
-              mob.get_center()[0] + .0625,
-              mob.get_center()[1],
-              0
-            )),
-          )
+      # if self.direction == 1:
+      has_not_collided = (self.get_obstacle_point_tracker(ob1, ob2)[self.direction] - self.get_relevant_extreme()[self.direction]) * self.direction >= ((mob.width/2 - SMALL_BUFF) * self.direction)
 
-        else:
-          if infiniteRoam:
-            self.fly.flip()
-            self.update_direction(-1)
+      has_collided = not has_not_collided
 
+      if (has_not_collided):
+        mob.move_to(
+          np.array((
+            mob.get_center()[0] + .0625 * self.direction,
+            mob.get_center()[1],
+            0
+          )),
+        )
 
-      elif self.direction == -1:
-        if (mob.get_left()[0] - self.get_point_tracker(ob1, ob2)[0] >= mob.width/2):
-          mob.move_to(
-            np.array((
-              # mob.get_center()[0] + dt * self.get_point_tracker()[0],
-              mob.get_center()[0] - .0625,
-              mob.get_center()[1],
-              0
-            )),
-          )
+      elif has_collided and infiniteRoam:
+        self.fly.flip()
+        self.update_direction(self.direction * -1)
 
-        else:
-          if infiniteRoam:
-            self.fly.flip()
-            self.update_direction(1)
+      else:
+        self.fly.flip()
+        self.fly.suspend_updating()
 
     self.fly.add_updater(obstacle_updater)
 
@@ -108,8 +110,11 @@ class ComplexTrain(SVGMobject):
     self.direction = direction
     self.add(self.train)
 
-  def roam_before_fly_contact(self, fly: GojoFly):
-    """Allows the train to basically keep moving till it comes in contact with the fly"""
+  def roam_before_fly_contact(self, fly: GojoFly, target: SVGMobject):
+    """
+      Allows the train to basically keep moving till it comes in contact with the fly
+      or till another of the target objects in the vicinity comes in contact with the fly.
+    """
     def train_updater(mob: VMobject):
       train_relevant_extreme = mob.get_right() if self.direction == 1 else mob.get_left()
       fly_center = fly.get_center()
@@ -124,7 +129,18 @@ class ComplexTrain(SVGMobject):
           ))
         ))
 
+      else:
+        target.pause_roaming()
+
     self.train.add_updater(train_updater)
+
+  def pause_roaming(self):
+    """Pauses update of the train with every frame"""
+    self.train.suspend_updating()
+
+  def resume_roaming(self):
+    """Resumes update of the train with every frame"""
+    self.train.resume_updating()
 
 # Custom Count Animation
 class Count(Animation):
@@ -588,32 +604,24 @@ class Puzzle(MovingCameraScene):
       )
     )
 
+    # Remove the velocity vectors from the scene
+    self.play(
+      Unwrite(gojo_fly_velocity_annot),
+      Unwrite(left_train_velocity_annot),
+      Unwrite(right_train_velocity_annot)
+    )
+
+    self.remove(gojo_fly_velocity_annot, left_train_velocity_annot, right_train_velocity_annot)
+
     #----------------------------- The animation of the first two leg trips -------------------------------------------------#
-    # TODO IN 3 hours: Instead of hard coding it this way, you can set an updater for the trains and just set them in motion, they stop moving the moment the fly collides with any of them
-    # To ensure that the velocity of the trains is twice that of the fly, update that in the updater function
     gojo_fly.roam(left_complex_train, right_complex_train, infiniteRoam=False)
-    left_complex_train.roam_before_fly_contact(gojo_fly.fly)
-    right_complex_train.roam_before_fly_contact(gojo_fly.fly)
+    left_complex_train.roam_before_fly_contact(gojo_fly.fly, right_complex_train)
+    right_complex_train.roam_before_fly_contact(gojo_fly.fly, left_complex_train)
 
     self.play(
       self.camera.frame.animate.scale(1),
-      run_time=15
+      run_time=8
     )
-
-    # self.play(
-    #   left_complex_train.animate(rate_func=linear).shift((RIGHT * left_complex_train.width * 1.6 - np.array((left_complex_train.width/2 - 0.05, 0.0, 0.0)))/2),
-    #   right_complex_train.animate(rate_func=linear).shift((LEFT * right_complex_train.width * 1.6 + np.array((right_complex_train.width/2 - 0.05, 0.0, 0.0)))/2),
-    #   # gojo_fly.animate(rate_func=linear).move_to((right_complex_train.get_left()[0] - (right_complex_train.width * 0.5), right_complex_train.get_left()[1], right_complex_train.get_left()[2])),
-    #   run_time=5,
-    # )
-
-    # def fly_leg_journey(leg: int):
-
-    #   pass
-
-    # for leg in range(7):
-
-    #   pass
 
     # Day 3: TODO: Work on the Hard Solution
 
