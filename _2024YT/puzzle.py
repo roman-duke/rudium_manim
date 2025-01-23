@@ -91,17 +91,17 @@ class GojoFly(SVGMobject):
         )
 
       elif has_collided and infiniteRoam:
-        self.fly.flip()
+        self.flip()
         self.update_direction(self.direction * -1)
 
       else:
-        self.fly.flip()
-        self.fly.suspend_updating()
+        self.flip()
+        self.suspend_updating()
 
-    self.fly.add_updater(obstacle_updater)
+    self.add_updater(obstacle_updater)
 
   def clear_all_updaters(self):
-    self.fly.clear_updaters()
+    self.clear_updaters()
 
 class ComplexTrain(SVGMobject):
   def __init__(self, file_name, color, direction, **kwargs):
@@ -132,15 +132,15 @@ class ComplexTrain(SVGMobject):
       else:
         target.pause_roaming()
 
-    self.train.add_updater(train_updater)
+    self.add_updater(train_updater)
 
   def pause_roaming(self):
     """Pauses update of the train with every frame"""
-    self.train.suspend_updating()
+    self.suspend_updating()
 
   def resume_roaming(self):
     """Resumes update of the train with every frame"""
-    self.train.resume_updating()
+    self.resume_updating()
 
 # Custom Count Animation
 class Count(Animation):
@@ -613,7 +613,25 @@ class Puzzle(MovingCameraScene):
 
     self.remove(gojo_fly_velocity_annot, left_train_velocity_annot, right_train_velocity_annot)
 
+    #----------------------------- Display the total available initial distance -------------------------------------------------#
+    distance_brace = BraceBetweenPoints(left_complex_train.get_right(), right_complex_train.get_left()).next_to(track, direction=DOWN, buff=.2)
+    distance_between_trains = MathTex(r"s_{\text{leg.1}}").next_to(distance_brace, direction=DOWN, buff=.2)
+    self.play(
+      Write(distance_brace),
+      Write(distance_between_trains)
+    )
+
+    self.play(
+      Unwrite(distance_brace),
+      Unwrite(distance_between_trains)
+    )
     #----------------------------- The animation of the first two leg trips -------------------------------------------------#
+    # Add a brace to illustrate the distance covered by the train
+    # Add a brace to illustrate the distance covered by the fly
+    initial_left_train_pos = left_complex_train.get_right()
+    initial_right_train_pos = right_complex_train.get_left()
+    initial_fly_pos = gojo_fly.get_center()
+
     gojo_fly.roam(left_complex_train, right_complex_train, infiniteRoam=False)
     left_complex_train.roam_before_fly_contact(gojo_fly.fly, right_complex_train)
     right_complex_train.roam_before_fly_contact(gojo_fly.fly, left_complex_train)
@@ -621,6 +639,23 @@ class Puzzle(MovingCameraScene):
     self.play(
       self.camera.frame.animate.scale(1),
       run_time=8
+    )
+
+    left_train_brace = BraceBetweenPoints(initial_left_train_pos, left_complex_train.get_right()).shift(DOWN*.25)
+    left_complex_train_annot = MathTex(r"s_{\text{left train leg 1}}").next_to(left_train_brace, direction=DOWN, buff=.2)
+
+    right_train_brace = BraceBetweenPoints(right_complex_train.get_left(), initial_right_train_pos).shift(DOWN*.25)
+    right_complex_train_annot = MathTex(r"s_{\text{right train leg 1}}").next_to(right_train_brace, direction=DOWN, buff=.2)
+
+    # Distance covered by the fly
+    fly_distance_brace = BraceBetweenPoints(initial_fly_pos, gojo_fly.get_center(), direction=UP).shift(UP).scale(.75)
+
+    self.play(
+      Write(left_train_brace),
+      Write(right_train_brace),
+      Write(left_complex_train_annot),
+      Write(right_complex_train_annot),
+      Write(fly_distance_brace)
     )
 
     # Day 3: TODO: Work on the Hard Solution
