@@ -589,7 +589,9 @@ class Puzzle(MovingCameraScene):
         .align_to(solution_demarcation, direction=UP)\
         .shift(DOWN * 0.65)
 
-    total_distance_relationship_per_leg = MathTex(r"s_{\tiny \text{leg}} = s_{\tiny \text{fly}} + s_{\tiny \text{train}}")\
+    total_distance_relationship_per_leg = MathTex(
+      r"{{ s_{\tiny \text{leg}} }} = {{ s_{\tiny \text{fly}} }} + {{ s_{\tiny \text{train}} }}",
+      )\
         .next_to(solution_demarcation, direction=RIGHT, buff=2)\
         .align_to(solution_demarcation, direction=UP)\
         .shift(DOWN * 0.65)
@@ -616,6 +618,7 @@ class Puzzle(MovingCameraScene):
     #----------------------------- Display the total available initial distance -------------------------------------------------#
     distance_brace = BraceBetweenPoints(left_complex_train.get_right(), right_complex_train.get_left()).next_to(track, direction=DOWN, buff=.2)
     distance_between_trains = MathTex(r"s_{\text{leg.1}}").next_to(distance_brace, direction=DOWN, buff=.2)
+
     self.play(
       Write(distance_brace),
       Write(distance_between_trains)
@@ -630,7 +633,16 @@ class Puzzle(MovingCameraScene):
     # Add a brace to illustrate the distance covered by the fly
     initial_left_train_pos = left_complex_train.get_right()
     initial_right_train_pos = right_complex_train.get_left()
-    initial_fly_pos = gojo_fly.get_center()
+    initial_fly_pos = gojo_fly.get_left() if gojo_fly.direction == 1 else gojo_fly.get_right()
+
+    # Add markers to show the reference distance between the trains
+    left_train_marker = Dot(initial_left_train_pos, color=GRAY).shift(DOWN * 0.5)
+    right_train_marker = Dot(initial_right_train_pos, color=GRAY).shift(DOWN * 0.5)
+
+    self.play(
+      Write(left_train_marker),
+      Write(right_train_marker),
+    )
 
     gojo_fly.roam(left_complex_train, right_complex_train, infiniteRoam=False)
     left_complex_train.roam_before_fly_contact(gojo_fly.fly, right_complex_train)
@@ -649,14 +661,49 @@ class Puzzle(MovingCameraScene):
 
     # Distance covered by the fly
     fly_distance_brace = BraceBetweenPoints(initial_fly_pos, gojo_fly.get_center(), direction=UP).shift(UP)
+    fly_distance_annot = MathTex(r"s_{\text{fly\_leg\_1}}").next_to(fly_distance_brace, direction=DOWN, buff=.2)
 
     self.play(
       Write(left_train_brace),
       Write(right_train_brace),
       Write(left_complex_train_annot),
       Write(right_complex_train_annot),
-      # Write(fly_distance_brace)
       Write(fly_distance_brace),
+      Write(fly_distance_annot)
+    )
+
+
+    # Indicate the respective distance braces
+    self.play(
+      Indicate(left_train_brace)
+    )
+
+    self.play(
+      Indicate(right_train_brace)
+    )
+
+    self.play(
+      Indicate(fly_distance_brace)
+    )
+
+    # Visual illustration of the distance covered by the train and the fly
+    self.play(
+      Unwrite(left_complex_train_annot),
+      Unwrite(right_complex_train_annot),
+      Unwrite(fly_distance_annot)
+    )
+
+    self.wait(1)
+
+    self.play(
+      right_train_brace.animate.next_to(fly_distance_brace, direction=LEFT, buff=0)\
+        .shift(DOWN*0.5 + RIGHT*right_train_brace.width),
+    )
+
+    self.play(
+      Unwrite(left_train_brace),
+      Unwrite(right_train_brace),
+      Unwrite(fly_distance_brace),
     )
 
     # Day 3: TODO: Work on the Hard Solution
