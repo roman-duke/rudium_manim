@@ -648,14 +648,15 @@ class Puzzle(MovingCameraScene):
     right_complex_train_annot = MathTex(r"s_{\text{right train leg 1}}").next_to(right_train_brace, direction=DOWN, buff=.2)
 
     # Distance covered by the fly
-    fly_distance_brace = BraceBetweenPoints(initial_fly_pos, gojo_fly.get_center(), direction=UP).shift(UP).scale(.75)
+    fly_distance_brace = BraceBetweenPoints(initial_fly_pos, gojo_fly.get_center(), direction=UP).shift(UP)
 
     self.play(
       Write(left_train_brace),
       Write(right_train_brace),
       Write(left_complex_train_annot),
       Write(right_complex_train_annot),
-      Write(fly_distance_brace)
+      # Write(fly_distance_brace)
+      Write(fly_distance_brace),
     )
 
     # Day 3: TODO: Work on the Hard Solution
