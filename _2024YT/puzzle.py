@@ -44,6 +44,7 @@ class GojoFly(SVGMobject):
     self.fly = SVGMobject(file_name).set_color(color)
     self.add(self.fly)
     self.direction = 1
+    self.infinite_roam = True
 
   def get_obstacle_point_tracker(self, obstacle1: VMobject, obstacle2: VMobject) -> dict[int, float]:
     """Gets the current points of the obstacles we actually need only the x coord"""
@@ -65,6 +66,10 @@ class GojoFly(SVGMobject):
       1: p2
     }
 
+  def set_infinite_roam(self, should_roam: bool):
+    """Sets the infinite roam property of the fly"""
+    self.infinite_roam = should_roam
+
   def update_direction(self, dir: int):
     """Updates the direction of the fly"""
     self.direction = dir
@@ -74,6 +79,7 @@ class GojoFly(SVGMobject):
 
   def roam(self, ob1: VMobject, ob2: VMobject, infiniteRoam=True):
     """Allows the fly to roam horizontally, changing direction if a collision is detected"""
+    self.set_infinite_roam(infiniteRoam)
     # Add an updater to track the motion of the left and right trains
     def obstacle_updater(mob: VMobject, dt):
       # if self.direction == 1:
@@ -90,15 +96,18 @@ class GojoFly(SVGMobject):
           )),
         )
 
-      elif has_collided and infiniteRoam:
+      elif has_collided and self.infinite_roam:
         self.flip()
         self.update_direction(self.direction * -1)
 
       else:
-        self.flip()
         self.suspend_updating()
 
     self.add_updater(obstacle_updater)
+
+  def resume_roaming(self):
+    self.set_infinite_roam(True)
+    self.resume_updating()
 
   def clear_all_updaters(self):
     self.clear_updaters()
@@ -704,6 +713,15 @@ class Puzzle(MovingCameraScene):
       Unwrite(left_train_brace),
       Unwrite(right_train_brace),
       Unwrite(fly_distance_brace),
+    )
+
+    # right_complex_train.resume_roaming()
+    left_complex_train.resume_roaming()
+    gojo_fly.resume_roaming()
+
+    self.play(
+      self.camera.frame.animate.scale(1),
+      run_time=4
     )
 
     # Day 3: TODO: Work on the Hard Solution
