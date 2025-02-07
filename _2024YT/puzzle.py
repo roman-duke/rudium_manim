@@ -44,7 +44,10 @@ class GojoFly(SVGMobject):
     self.fly = SVGMobject(file_name).set_color(color)
     self.add(self.fly)
     self.direction = 1
-    self.infinite_roam = True
+    self.infinite_roam = False
+    self.roam_trips = 0
+    self._roam_count = 0
+    self.roam_current_trip = False
 
   def get_obstacle_point_tracker(self, obstacle1: VMobject, obstacle2: VMobject) -> dict[int, float]:
     """Gets the current points of the obstacles we actually need only the x coord"""
@@ -70,6 +73,15 @@ class GojoFly(SVGMobject):
     """Sets the infinite roam property of the fly"""
     self.infinite_roam = should_roam
 
+  def set_roam_trips(self, roam_trips):
+    self.roam_trips = roam_trips
+
+  def roam_update(self):
+    """Updates the number of trips that the fly has taken"""
+    self._roam_count += 1
+    if self._roam_count == self.roam_trips:
+      self.infinite_roam = True
+
   def update_direction(self, dir: int):
     """Updates the direction of the fly"""
     self.direction = dir
@@ -77,9 +89,13 @@ class GojoFly(SVGMobject):
   def restore_position(self):
     return super().restore()
 
-  def roam(self, ob1: VMobject, ob2: VMobject, infiniteRoam=True):
+  def set_force_roam_trip(self, roam_current_trip):
+    self.roam_current_trip = roam_current_trip
+
+  def roam(self, ob1: VMobject, ob2: VMobject, infiniteRoam=True, roam_trips=0):
     """Allows the fly to roam horizontally, changing direction if a collision is detected"""
     self.set_infinite_roam(infiniteRoam)
+    self.set_roam_trips(roam_trips)
     # Add an updater to track the motion of the left and right trains
     def obstacle_updater(mob: VMobject, dt):
       # if self.direction == 1:
@@ -96,18 +112,26 @@ class GojoFly(SVGMobject):
           )),
         )
 
-      elif has_collided and self.infinite_roam:
+      elif has_collided and (self.infinite_roam or self.roam_current_trip):
         self.flip()
         self.update_direction(self.direction * -1)
+        self.set_force_roam_trip(False)
 
       else:
-        self.suspend_updating()
+        self.suspend_roaming()
 
     self.add_updater(obstacle_updater)
 
   def resume_roaming(self):
-    self.set_infinite_roam(True)
+    # self.set_infinite_roam(True)
     self.resume_updating()
+
+  def suspend_roaming(self):
+    """We need this to basically suspend running the updater function, but update a go-ahead flag to be used when the updates resume"""
+    self.set_force_roam_trip(True)
+    print("Printing the current flag of the roam trip", self.roam_current_trip)
+    self.roam_update()
+    self.suspend_updating()
 
   def clear_all_updaters(self):
     self.clear_updaters()
@@ -117,6 +141,7 @@ class ComplexTrain(SVGMobject):
     super().__init__(file_name, **kwargs)
     self.train = SVGMobject(file_name).set_color(color)
     self.direction = direction
+    self.roaming_suspended = False
     self.add(self.train)
 
   def roam_before_fly_contact(self, fly: GojoFly, target: SVGMobject):
@@ -129,7 +154,9 @@ class ComplexTrain(SVGMobject):
       fly_center = fly.get_center()
       buff_contact = -fly.width/2 if self.direction == 1 else fly.width/2
 
-      if ((train_relevant_extreme[0] - fly_center[0]) * self.direction <= self.direction * buff_contact):
+      has_not_collided = (train_relevant_extreme[0] - fly_center[0]) * self.direction <= self.direction * buff_contact
+
+      if (has_not_collided):
         mob.move_to((
           np.array((
             mob.get_center()[0] + .03125 * self.direction,
@@ -138,17 +165,22 @@ class ComplexTrain(SVGMobject):
           ))
         ))
 
-      else:
+        if target.roaming_suspended:
+          target.resume_roaming()
+
+      elif not has_not_collided:
         target.pause_roaming()
 
     self.add_updater(train_updater)
 
   def pause_roaming(self):
     """Pauses update of the train with every frame"""
+    self.roaming_suspended = True
     self.suspend_updating()
 
   def resume_roaming(self):
     """Resumes update of the train with every frame"""
+    self.roaming_suspended = False
     self.resume_updating()
 
 # Custom Count Animation
@@ -653,7 +685,7 @@ class Puzzle(MovingCameraScene):
       Write(right_train_marker),
     )
 
-    gojo_fly.roam(left_complex_train, right_complex_train, infiniteRoam=False)
+    gojo_fly.roam(left_complex_train, right_complex_train, infiniteRoam=False, roam_trips=3)
     left_complex_train.roam_before_fly_contact(gojo_fly.fly, right_complex_train)
     right_complex_train.roam_before_fly_contact(gojo_fly.fly, left_complex_train)
 
@@ -680,7 +712,6 @@ class Puzzle(MovingCameraScene):
       Write(fly_distance_brace),
       Write(fly_distance_annot)
     )
-
 
     # Indicate the respective distance braces
     self.play(
@@ -715,9 +746,9 @@ class Puzzle(MovingCameraScene):
       Unwrite(fly_distance_brace),
     )
 
-    # right_complex_train.resume_roaming()
-    left_complex_train.resume_roaming()
     gojo_fly.resume_roaming()
+    left_complex_train.resume_roaming()
+    right_complex_train.resume_roaming()
 
     self.play(
       self.camera.frame.animate.scale(1),
