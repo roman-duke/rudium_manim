@@ -129,7 +129,6 @@ class GojoFly(SVGMobject):
   def suspend_roaming(self):
     """We need this to basically suspend running the updater function, but update a go-ahead flag to be used when the updates resume"""
     self.set_force_roam_trip(True)
-    print("Printing the current flag of the roam trip", self.roam_current_trip)
     self.roam_update()
     self.suspend_updating()
 
@@ -630,9 +629,19 @@ class Puzzle(MovingCameraScene):
         .align_to(solution_demarcation, direction=UP)\
         .shift(DOWN * 0.65)
 
-    total_distance_relationship_per_leg = MathTex(
-      r"{{ s_{\tiny \text{leg}} }} = {{ s_{\tiny \text{fly}} }} + {{ s_{\tiny \text{train}} }}",
-      )\
+    def get_distance_relationship_for_current_leg(leg_no="n"):
+        s_leg = r"{{ s_{\tiny \text{leg}_" + f"{leg_no}" + r"} }}"
+        s_fly = r"{{ s_{\tiny \text{fly}_" + f"{leg_no}" + r"} }}"
+        s_train = r"{{ s_{\tiny \text{train}_" + f"{leg_no}" + r"} }}"
+        return MathTex(rf"{s_leg} = {s_fly} + {s_train}")
+
+    def get_midly_simplified_distance_relationship_for_current_leg(leg_no="n"):
+        s_leg = r"{{ s_{\tiny \text{leg}_" + f"{leg_no}" + r"} }}"
+        s_fly = r"{{ s_{\tiny \text{fly}_" + f"{leg_no}" + r"} }}"
+        s_train = r"{{ \frac{1}{2}s_{\tiny \text{fly}_" + f"{leg_no}" + r"} }}"
+        return MathTex(rf"{s_leg} = {s_fly} + {s_train}")
+
+    total_distance_relationship_per_leg = get_distance_relationship_for_current_leg()\
         .next_to(solution_demarcation, direction=RIGHT, buff=2)\
         .align_to(solution_demarcation, direction=UP)\
         .shift(DOWN * 0.65)
@@ -740,6 +749,24 @@ class Puzzle(MovingCameraScene):
         .shift(DOWN*0.5 + RIGHT*right_train_brace.width),
     )
 
+    current_distance_relationship = get_distance_relationship_for_current_leg(1)\
+              .next_to(total_distance_relationship_per_leg, direction=DOWN, buff=.5)
+
+    mildly_simplified_current_distance_relationship = get_midly_simplified_distance_relationship_for_current_leg(1)\
+              .next_to(current_distance_relationship, direction=DOWN, buff=.5)
+
+
+    self.play(
+      Write(current_distance_relationship)
+    )
+
+    self.play(
+      TransformMatchingTex(
+        current_distance_relationship,
+        mildly_simplified_current_distance_relationship
+      )
+    )
+    
     self.play(
       Unwrite(left_train_brace),
       Unwrite(right_train_brace),
@@ -753,6 +780,20 @@ class Puzzle(MovingCameraScene):
     self.play(
       self.camera.frame.animate.scale(1),
       run_time=4
+    )
+
+    # Honestly this could be more declarative, but at this point I am so tired of working on this project and I just
+    # want to try and wrap it up so I am going to leave things procedural
+    # besides what's the point of abstracting it into a method and trying to be declarative when the animation is only
+    # going to be repeated twice? Exactly
+
+    gojo_fly.resume_roaming()
+    left_complex_train.resume_roaming()
+    right_complex_train.resume_roaming()
+
+    self.play(
+      self.camera.frame.animate.scale(1),
+      run_time=2
     )
 
     # Day 3: TODO: Work on the Hard Solution
