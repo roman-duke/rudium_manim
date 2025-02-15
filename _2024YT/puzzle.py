@@ -630,16 +630,37 @@ class Puzzle(MovingCameraScene):
         .shift(DOWN * 0.65)
 
     def get_distance_relationship_for_current_leg(leg_no="n"):
-        s_leg = r"{{ s_{\tiny \text{leg}_" + f"{leg_no}" + r"} }}"
-        s_fly = r"{{ s_{\tiny \text{fly}_" + f"{leg_no}" + r"} }}"
-        s_train = r"{{ s_{\tiny \text{train}_" + f"{leg_no}" + r"} }}"
-        return MathTex(rf"{s_leg} = {s_fly} + {s_train}")
+      s_leg = r"{{ s_{\tiny \text{leg}_" + f"{leg_no}" + r"} }}"
+      s_fly = r"{{ s_{\tiny \text{fly}_" + f"{leg_no}" + r"} }}"
+      s_train = r"{{ s_{\tiny \text{train}_" + f"{leg_no}" + r"} }}"
+      return MathTex(rf"{s_leg} = {s_fly} + {s_train}")
 
-    def get_midly_simplified_distance_relationship_for_current_leg(leg_no="n"):
-        s_leg = r"{{ s_{\tiny \text{leg}_" + f"{leg_no}" + r"} }}"
-        s_fly = r"{{ s_{\tiny \text{fly}_" + f"{leg_no}" + r"} }}"
-        s_train = r"{{ \frac{1}{2}s_{\tiny \text{fly}_" + f"{leg_no}" + r"} }}"
-        return MathTex(rf"{s_leg} = {s_fly} + {s_train}")
+    def get_mildly_simplified_distance_relationship_for_current_leg(leg_no="n"):
+      s_leg = r"{{ s_{\tiny \text{leg}_" + f"{leg_no}" + r"} }}"
+      s_fly = r"{{ s_{\tiny \text{fly}_" + f"{leg_no}" + r"} }}"
+      s_train = r"{{ \frac{1}{2}s_{\tiny \text{fly}_" + f"{leg_no}" + r"} }}"
+      return MathTex(rf"{s_leg} = {s_fly} + {s_train}")
+
+    def get_overly_simplified_distance_relationship_for_current_leg(leg_no="n"):
+      s_leg = r"{{ s_{\tiny \text{leg}_" + f"{leg_no}" + r"} }}"
+      s_simplified = r"{{ \frac{3}{2}s_{\tiny \text{fly}_" + f"{leg_no}" + r"} }}"
+      s_fly = r"{{ s_{\tiny \text{fly}_" + f"{leg_no}" + r"} }}"
+      s_rearranged = r"{{ \frac{2}{3}s_{\tiny \text{leg}_" + f"{leg_no}" + r"} }}"
+
+      return MathTex(rf"{s_leg} = {s_simplified} \\ {s_fly} = {s_rearranged}")
+
+    # This is a very impure function, but lol, what do I know about functional programming
+    def append_to_partial_sum(leg_no=1):
+      partial_sum = ''
+      for i in range(leg_no):
+        partial_sum += r"{{ \frac{2}{3}s_{\tiny \text{leg}_" + f"{i + 1}" + r"} }}" + r" + "
+
+      result = r"S_{\tiny \text{fly total}} = " + partial_sum + r"..."
+
+      return MathTex(result)\
+        .next_to(solution_demarcation, direction=LEFT, buff=2)\
+        .align_to(solution_demarcation, direction=UP)\
+        .shift(DOWN * 0.65)
 
     total_distance_relationship_per_leg = get_distance_relationship_for_current_leg()\
         .next_to(solution_demarcation, direction=RIGHT, buff=2)\
@@ -749,52 +770,78 @@ class Puzzle(MovingCameraScene):
         .shift(DOWN*0.5 + RIGHT*right_train_brace.width),
     )
 
-    current_distance_relationship = get_distance_relationship_for_current_leg(1)\
-              .next_to(total_distance_relationship_per_leg, direction=DOWN, buff=.5)
-
-    mildly_simplified_current_distance_relationship = get_midly_simplified_distance_relationship_for_current_leg(1)\
-              .next_to(current_distance_relationship, direction=DOWN, buff=.5)
-
-
-    self.play(
-      Write(current_distance_relationship)
-    )
-
-    self.play(
-      TransformMatchingTex(
-        current_distance_relationship,
-        mildly_simplified_current_distance_relationship
-      )
-    )
-    
-    self.play(
-      Unwrite(left_train_brace),
-      Unwrite(right_train_brace),
-      Unwrite(fly_distance_brace),
-    )
-
-    gojo_fly.resume_roaming()
-    left_complex_train.resume_roaming()
-    right_complex_train.resume_roaming()
-
-    self.play(
-      self.camera.frame.animate.scale(1),
-      run_time=4
-    )
-
     # Honestly this could be more declarative, but at this point I am so tired of working on this project and I just
     # want to try and wrap it up so I am going to leave things procedural
     # besides what's the point of abstracting it into a method and trying to be declarative when the animation is only
     # going to be repeated twice? Exactly
 
-    gojo_fly.resume_roaming()
-    left_complex_train.resume_roaming()
-    right_complex_train.resume_roaming()
+    partial_sum = MathTex('')
+
+    for i in range(1, 4):
+      current_distance_relationship = get_distance_relationship_for_current_leg(i)\
+                .next_to(total_distance_relationship_per_leg, direction=DOWN, buff=.5)
+
+      mildly_simplified_current_distance_relationship = get_mildly_simplified_distance_relationship_for_current_leg(i)\
+                .next_to(current_distance_relationship, direction=DOWN, buff=.5)
+
+      overly_simplified_distance_relationship = get_overly_simplified_distance_relationship_for_current_leg(i)\
+                .next_to(mildly_simplified_current_distance_relationship, direction=DOWN, buff=.5)
+
+      self.play(
+        Write(current_distance_relationship)
+      )
+
+      self.play(
+        TransformMatchingTex(
+          current_distance_relationship,
+          mildly_simplified_current_distance_relationship
+        )
+      )
+
+      self.play(
+        Write(overly_simplified_distance_relationship)
+      )
+
+      partial_sum = append_to_partial_sum(i)
+
+      self.play(
+        AnimationGroup(
+          Unwrite(total_fly_distance_covered),
+          Transform(
+            overly_simplified_distance_relationship,
+            partial_sum,
+            replace_mobject_with_target_in_scene=True
+          ),
+          lag_ratio=.95
+        )
+      )
+
+      self.play(
+        Unwrite(left_train_brace),
+        Unwrite(right_train_brace),
+        Unwrite(fly_distance_brace),
+      )
+
+      gojo_fly.resume_roaming()
+      left_complex_train.resume_roaming()
+      right_complex_train.resume_roaming()
+
+      self.play(
+        self.camera.frame.animate.scale(1),
+        run_time=(4/i)
+      )
+
+      # Remove expressions for the previous leg
+      self.play(
+        Unwrite(partial_sum) if i != 3 else partial_sum.animate.scale(1),
+        Unwrite(mildly_simplified_current_distance_relationship)
+      )
 
     self.play(
-      self.camera.frame.animate.scale(1),
-      run_time=2
+      Indicate(partial_sum),
     )
+
+    # simplified_partial_sum = MathTex(r"")
 
     # Day 3: TODO: Work on the Hard Solution
 
