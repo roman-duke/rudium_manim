@@ -841,7 +841,52 @@ class Puzzle(MovingCameraScene):
       Indicate(partial_sum),
     )
 
-    # simplified_partial_sum = MathTex(r"")
+    # Shift demarcation to create more room for the equation
+    self.play(
+      AnimationGroup(
+        Unwrite(total_distance_relationship_per_leg),
+        solution_demarcation.animate.shift(RIGHT * 3),
+        lag_ratio=1
+      )
+    )
+
+    simplified_partial_sum = MathTex(r"= {{ \frac{2}{3}s_{\tiny \text{leg}_1} +\
+                                      \frac{1}{3}(\frac{2}{3}s_{\tiny \text{leg}_1}) +\
+                                     \frac{1}{3}(\frac{1}{3})(\frac{2}{3}s_{\tiny \text{leg}_1}) +\
+                                     ... + \frac{1}{3}^{n-1}\frac{2}{3}s_{\tiny \text{leg}_1}}}"
+                                     ).next_to(partial_sum, direction=DOWN, buff=.5)\
+                                      .shift(RIGHT * 2.5)
+
+    self.play(
+      Write(simplified_partial_sum)
+    )
+
+    infinite_geometric_sum = MathTex(
+      r"\sum_{n=1}^\infty ar^n = \frac{a}{1 - r}, \quad \text{for } |r| < 1 \
+      \\ \text{where } a = \frac{2}{3} \cdot s_{\text{leg}_1}, \quad r = \frac{1}{3} \
+      \\ s_{\text{leg}_1} = 100\, \tiny \text{km}"
+    ).next_to(solution_demarcation, direction=RIGHT, buff=1)\
+        .align_to(solution_demarcation, direction=UP)\
+        .shift(DOWN * 0.65)
+
+    self.play(Write(infinite_geometric_sum))
+
+    final_expression = MathTex(r"= \frac{\frac{2}{3} \times 100}{1 - \frac{1}{3}} ").next_to(simplified_partial_sum, direction=DOWN, buff=1)
+
+    final_medium_answer = MathTex(r"100km").next_to(final_expression, direction=DOWN, buff=1)
+
+    self.play(Write(final_expression))
+
+
+    self.play(
+      Write(final_medium_answer),
+    )
+
+    self.play(
+      Indicate(final_medium_answer)
+    ),
+
+    self.wait(1)
 
     # Day 3: TODO: Work on the Hard Solution
 
