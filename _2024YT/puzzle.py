@@ -974,6 +974,58 @@ class Puzzle(MovingCameraScene):
       Write(right_branch)
     )
 
+    linear_drag_equation = MathTex(r'\mathbf{F}_{\tiny \text{LD}} = -b\mathbf{v}')\
+      .move_to(left_mini_frame)\
+      .scale(0.5)
+
+    linear_drag_label = Tex(r'Linear Drag')\
+      .next_to(left_mini_frame, direction=DOWN)\
+      .scale(.5)
+
+    linear_drag_group = VGroup(linear_drag_equation, linear_drag_label)
+
+    quadratic_drag_equation = MathTex(r'\mathbf{F_{\tiny \text{QD}}} = -cv^2\hat{v}')\
+      .move_to(right_mini_frame)\
+      .scale(.5)
+
+    quadratic_drag_label = Tex(r'Quadratic Drag')\
+      .next_to(right_mini_frame, direction=DOWN)\
+      .scale(.5)
+
+    quadratic_drag_group =  VGroup(quadratic_drag_equation, quadratic_drag_label)
+
+    self.play(
+      AnimationGroup(
+        Write(linear_drag_group),
+        Write(quadratic_drag_group),
+        lag_ratio=.9
+      ),
+    )
+
+    self.play(
+      Circumscribe(right_mini_frame),
+      FadeOut(
+        quadratic_drag_label,
+        linear_drag_group,
+        left_mini_frame,
+        right_branch,
+        left_branch,
+        drag,
+        shift=UP
+      ),
+    )
+
+    self.play(
+      AnimationGroup(
+        right_mini_frame
+          .animate
+          .move_to(inner_border)
+          .stretch_to_fit_height(inner_border.height)
+          .stretch_to_fit_width(inner_border.width)
+          .set_stroke(width=0),
+        quadratic_drag_equation.animate.move_to(inner_border)
+      )
+    )
 
     # Day 3: TODO: Work on the Hard Solution
 
