@@ -1027,6 +1027,67 @@ class Puzzle(MovingCameraScene):
       )
     )
 
+    self.play(
+      FadeOut(
+        quadratic_drag_equation,
+        shift=DOWN
+      )
+    )
+
+    simplified_gojo = Dot(radius=.125, color=LOGO_WHITE)
+
+    self.play(
+      Write(
+        simplified_gojo
+      )
+    )
+
+    top_arrow = Arrow(start=UP, end=DOWN)\
+      .scale(.5, scale_tips=True)\
+      .next_to(simplified_gojo, direction=UP)
+
+    top_arrow_label = MathTex(r'\mathbf{F_{y_1}').next_to(top_arrow).scale(.5)
+
+    top_arrow_group = VGroup(top_arrow, top_arrow_label)
+
+    bottom_arrow = top_arrow.copy()\
+      .flip(RIGHT)\
+      .next_to(simplified_gojo, direction=DOWN)
+
+    bottom_arrow_label = MathTex(r'\mathbf{F_{y_2}').next_to(bottom_arrow).scale(.5)
+
+    bottom_arrow_group = VGroup(bottom_arrow, bottom_arrow_label)
+
+    self.play(
+      FadeIn(
+        top_arrow_group,
+        shift=DOWN
+      ),
+
+      FadeIn(
+        bottom_arrow_group,
+        shift=UP
+      ),
+      run_time=.5
+    )
+
+    self.play(
+      FadeOut(
+        top_arrow_group,
+      ),
+
+      FadeOut(
+        bottom_arrow_group,
+      ),
+      run_time=.5
+    )
+
+    self.play(
+      simplified_gojo.animate.shift(RIGHT * 2),
+      rate_func=there_and_back,
+      run_time=2
+    )
+
     # Day 3: TODO: Work on the Hard Solution
 
     # Day 4: TODO: Record voiceover and work on half of the more complex solution
