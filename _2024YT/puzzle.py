@@ -1088,6 +1088,27 @@ class Puzzle(MovingCameraScene):
       run_time=2
     )
 
+    self.play(
+      FadeOut(simplified_gojo)
+    )
+
+    equation_of_motion = MathTex(r'm\frac{dv}{dt} = -cv^2')
+
+    self.play(
+      Write(equation_of_motion)
+    )
+
+    solution_to_the_equation = MathTex(
+      r'm\frac{dv\'}{v^2} = -c dt \\  \
+        m\int_{v_0}^{v} \frac{dv}{v^2} = -c \int_{0}^{t} dt\' \\ \
+        m(\frac{1}{v_0} - \frac{1}{v}) = -ct \\ \
+        v(t) = \frac{v_0}{1 + cv_0t/m} = \frac{v_0}{1 + t/𝜏}'
+    ).next_to(equation_of_motion, direction=DOWN)
+
+    self.play(
+      Write(solution_to_the_equation)
+    )
+
     # Day 3: TODO: Work on the Hard Solution
 
     # Day 4: TODO: Record voiceover and work on half of the more complex solution
