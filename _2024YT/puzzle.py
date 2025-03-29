@@ -1092,21 +1092,48 @@ class Puzzle(MovingCameraScene):
       FadeOut(simplified_gojo)
     )
 
-    equation_of_motion = MathTex(r'm\frac{dv}{dt} = -cv^2')
+    equation_of_motion = MathTex(r'm\frac{dv}{dt} = -cv^2').scale(.5).shift(UP)
 
     self.play(
       Write(equation_of_motion)
     )
 
-    solution_to_the_equation = MathTex(
-      r'm\frac{dv\'}{v^2} = -c dt \\  \
-        m\int_{v_0}^{v} \frac{dv}{v^2} = -c \int_{0}^{t} dt\' \\ \
+    simplified_solution_to_the_equation = MathTex(
+      r"m\frac{dv'}{v^2} = -c dt \\  \
+        m\int_{v_0}^{v} \frac{dv}{v^2} = -c \int_{0}^{t} dt' \\ \
         m(\frac{1}{v_0} - \frac{1}{v}) = -ct \\ \
-        v(t) = \frac{v_0}{1 + cv_0t/m} = \frac{v_0}{1 + t/𝜏}'
-    ).next_to(equation_of_motion, direction=DOWN)
+        v(t) = \frac{v_0}{1 + cv_0t/m} = \frac{v_0}{1 + t/\tau}"
+    )\
+    .scale(.5)\
+    .next_to(equation_of_motion, direction=DOWN)\
+    .align_to(equation_of_motion, direction=RIGHT)
 
     self.play(
-      Write(solution_to_the_equation)
+      Write(simplified_solution_to_the_equation)
+    )
+
+    penultimate_solution_to_the_equation = MathTex(
+      r"x(t) = x_0 + \int_{0}^{t}v(t')dt' \\ \
+        = v_0\tau\ln(1 + t/\tau)"
+    ).scale(.5)
+
+    self.play(
+      FadeOut(equation_of_motion),
+      TransformMatchingTex(simplified_solution_to_the_equation, penultimate_solution_to_the_equation)
+    )
+
+    final_solution_to_the_equation = MathTex(r'x(t) = v_0\tau\ln(1 + t/\tau)')
+
+    self.play(
+      FadeOut(penultimate_solution_to_the_equation)
+    )
+
+    self.play(
+      AnimationGroup(
+        Write(final_solution_to_the_equation),
+        Circumscribe(final_solution_to_the_equation),
+        lag_ratio=1
+      )
     )
 
     # Day 3: TODO: Work on the Hard Solution
@@ -1118,9 +1145,3 @@ class Puzzle(MovingCameraScene):
     # Day 6: TODO: Finishihng touches and edit the animations
 
     # Day 7: TODO: Edit it Adobe After EFfects
-
-    #---------------- EASY SOLUTION ----------------#
-    # Save the state of the fly and remove it from the scene
-    # gojo_fly.save_state()
-
-    # self.play(Unwrite(gojo_fly))
