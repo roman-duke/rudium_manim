@@ -1136,6 +1136,54 @@ class Puzzle(MovingCameraScene):
       )
     )
 
+    self.play(
+      FadeOut(final_solution_to_the_equation),
+      run_time=2
+    )
+
+    #=============================== CONCLUSION SCENE ======================================#
+    other_hidden_complexity_examples = [
+      {
+        "topic": "Newtonian Mechanics vs. General Relativity",
+        "run_time": 2,
+      },
+      {
+        "topic": "The n-body problem",
+        "run_time": 2,
+      },
+      {
+        "topic": "Conway's game of life",
+        "run_time": 10,
+      },
+      {
+        "topic": "Finding the shortest path - Dijkstra vs A* vs NP",
+        "run_time": 10,
+      },
+    ]
+
+    for example in other_hidden_complexity_examples:
+      example_mobject = Tex(fr'{example["topic"]}').scale(.85)
+
+      self.play(
+        FadeIn(
+          example_mobject,
+          shift=DOWN,
+        )
+      )
+
+      self.play(
+        example_mobject.animate.shift(UP * 2.5)
+      )
+
+      self.wait(example["run_time"])
+
+      self.play(
+        FadeOut(
+          example_mobject,
+          shift=UP
+        )
+      )
+
     # Day 3: TODO: Work on the Hard Solution
 
     # Day 4: TODO: Record voiceover and work on half of the more complex solution
