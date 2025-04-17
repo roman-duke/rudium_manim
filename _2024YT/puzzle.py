@@ -718,15 +718,15 @@ class Puzzle(MovingCameraScene):
         .align_to(solution_demarcation, direction=UP)\
         .shift(DOWN * 0.65)
 
-    # self.play(
-    #   Write(total_fly_distance_covered)
-    # )
+    self.play(
+      Write(total_fly_distance_covered)
+    )
 
-    # self.play(
-    #   Write(
-    #     total_distance_relationship_per_leg
-    #   )
-    # )
+    self.play(
+      Write(
+        total_distance_relationship_per_leg
+      )
+    )
 
     # Remove the velocity vectors from the scene
     self.play(
@@ -737,19 +737,6 @@ class Puzzle(MovingCameraScene):
 
     self.remove(gojo_fly_velocity_annot, left_train_velocity_annot, right_train_velocity_annot)
 
-    #----------------------------- Display the total available initial distance -------------------------------------------------#
-    distance_brace = BraceBetweenPoints(left_complex_train.get_right(), right_complex_train.get_left()).next_to(track, direction=DOWN, buff=.2)
-    distance_between_trains = MathTex(r"s_{\text{leg.1}}").next_to(distance_brace, direction=DOWN, buff=.2)
-
-    self.play(
-      Write(distance_brace),
-      Write(distance_between_trains)
-    )
-
-    self.play(
-      Unwrite(distance_brace),
-      Unwrite(distance_between_trains)
-    )
     #----------------------------- The animation of the first two leg trips -------------------------------------------------#
     # Add a brace to illustrate the distance covered by the train
     # Add a brace to illustrate the distance covered by the fly
@@ -766,16 +753,32 @@ class Puzzle(MovingCameraScene):
       Write(right_train_marker),
     )
 
+    #----------------------------- Display the total available initial distance -------------------------------------------------#
+    distance_brace = BraceBetweenPoints(left_complex_train.get_right(), right_complex_train.get_left()).next_to(track, direction=DOWN, buff=.2)
+    distance_between_trains = MathTex(r"s_{\text{leg.1}}").next_to(distance_brace, direction=DOWN, buff=.2)
+
+    self.play(
+      Write(distance_brace),
+      Write(distance_between_trains)
+    )
+
+    self.play(
+      Unwrite(distance_brace),
+      Unwrite(distance_between_trains)
+    )
+    #----------------------------------------------------------------------------------------------------------------------------#
+
     gojo_fly.roam(left_complex_train, right_complex_train, infiniteRoam=False, roam_trips=3)
     left_complex_train.roam_before_fly_contact(gojo_fly.fly, right_complex_train)
     right_complex_train.roam_before_fly_contact(gojo_fly.fly, left_complex_train)
 
+    #============================ Visual illustration of the distance covered by the train and the fly ==========================#
     self.play(
       self.camera.frame.animate.scale(1),
       run_time=8
     )
 
-    left_train_brace = BraceBetweenPoints(initial_left_train_pos, left_complex_train.get_right()).shift(DOWN*.25)
+    # left_train_brace = BraceBetweenPoints(initial_left_train_pos, left_complex_train.get_right()).shift(DOWN*.25)
     # left_complex_train_annot = MathTex(r"s_{\text{left train leg 1}}").next_to(left_train_brace, direction=DOWN, buff=.2)
 
     right_train_brace = BraceBetweenPoints(right_complex_train.get_left(), initial_right_train_pos).shift(DOWN*.25)
@@ -786,19 +789,14 @@ class Puzzle(MovingCameraScene):
     fly_distance_annot = MathTex(r"s_{\text{fly\_leg\_1}}").next_to(fly_distance_brace, direction=DOWN, buff=.2)
 
     self.play(
-      # Write(left_train_brace),
       Write(right_train_brace),
-      # Write(left_complex_train_annot),
       Write(right_complex_train_annot),
       Write(fly_distance_brace),
       Write(fly_distance_annot)
     )
 
-    # Indicate the respective distance braces
-    # self.play(
-    #   Indicate(left_train_brace)
-    # )
-
+    # Show that the total distance of this leg is equal to the distance covered by the fly + distance
+    # covered by the approaching train.
     self.play(
       Indicate(right_train_brace)
     )
@@ -807,18 +805,24 @@ class Puzzle(MovingCameraScene):
       Indicate(fly_distance_brace)
     )
 
-    # Visual illustration of the distance covered by the train and the fly
     self.play(
-      # Unwrite(left_complex_train_annot),
       Unwrite(right_complex_train_annot),
       Unwrite(fly_distance_annot)
     )
 
-    self.wait(1)
-
     self.play(
       right_train_brace.animate.next_to(fly_distance_brace, direction=LEFT, buff=0)\
         .shift(DOWN*0.5 + RIGHT*right_train_brace.width),
+    )
+
+    # Show that the distance covered by the left train is equal to that covered by the right train
+    self.play(
+      Write(left_train_brace),
+      run_time=.3
+    )
+
+    self.play(
+      Indicate(left_train_brace)
     )
 
     # Honestly this could be more declarative, but at this point I am so tired of working on this project and I just
@@ -838,6 +842,10 @@ class Puzzle(MovingCameraScene):
       overly_simplified_distance_relationship = get_overly_simplified_distance_relationship_for_current_leg(i)\
                 .next_to(mildly_simplified_current_distance_relationship, direction=DOWN, buff=.5)
 
+      # To be displayed at the side of the equations in each leg
+      train_simplified_distance_relationship = MathTex(r"{{ s_{\tiny \text{train}_" + f"{i}" + r"} }}" + "=" + r"{{ \frac{1}{3}s_{\tiny \text{leg}_" + f"{i}" + r"} }}")
+      train_simplified_distance_relationship.next_to(overly_simplified_distance_relationship)
+
       self.play(
         Write(current_distance_relationship)
       )
@@ -853,6 +861,10 @@ class Puzzle(MovingCameraScene):
         Write(overly_simplified_distance_relationship)
       )
 
+      self.play(
+        Write(train_simplified_distance_relationship)
+      )
+
       partial_sum = append_to_partial_sum(i)
 
       self.play(
@@ -865,6 +877,10 @@ class Puzzle(MovingCameraScene):
           ),
           lag_ratio=.95
         )
+      )
+
+      self.play(
+        train_simplified_distance_relationship.animate.next_to(mildly_simplified_current_distance_relationship, direction=DOWN, buff=.25)
       )
 
       self.play(
@@ -885,7 +901,8 @@ class Puzzle(MovingCameraScene):
       # Remove expressions for the previous leg
       self.play(
         Unwrite(partial_sum) if i != 3 else partial_sum.animate.scale(1),
-        Unwrite(mildly_simplified_current_distance_relationship)
+        Unwrite(mildly_simplified_current_distance_relationship),
+        Unwrite(train_simplified_distance_relationship),
       )
 
     self.play(
