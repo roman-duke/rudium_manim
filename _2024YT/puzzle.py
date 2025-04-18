@@ -778,7 +778,7 @@ class Puzzle(MovingCameraScene):
       run_time=8
     )
 
-    # left_train_brace = BraceBetweenPoints(initial_left_train_pos, left_complex_train.get_right()).shift(DOWN*.25)
+    left_train_brace = BraceBetweenPoints(initial_left_train_pos, left_complex_train.get_right()).shift(DOWN*.25)
     # left_complex_train_annot = MathTex(r"s_{\text{left train leg 1}}").next_to(left_train_brace, direction=DOWN, buff=.2)
 
     right_train_brace = BraceBetweenPoints(right_complex_train.get_left(), initial_right_train_pos).shift(DOWN*.25)
@@ -879,8 +879,26 @@ class Puzzle(MovingCameraScene):
         )
       )
 
+      # Move the train relationship to the occupy the previously occupied fly relationship space.
       self.play(
-        train_simplified_distance_relationship.animate.next_to(mildly_simplified_current_distance_relationship, direction=DOWN, buff=.25)
+        train_simplified_distance_relationship
+          .animate
+          .next_to(
+            mildly_simplified_current_distance_relationship,
+            direction=DOWN,
+            buff=.25
+          )
+      )
+
+      # TODO: Now show what the available distance would be for the next leg
+
+      # Update the positions of the markers
+      left_train_pos = left_complex_train.get_right()
+      right_train_pos = right_complex_train.get_left()
+
+      self.play(
+        left_train_marker.animate.move_to(left_train_pos).shift(DOWN * 0.5),
+        right_train_marker.animate.move_to(right_train_pos).shift(DOWN * 0.5)
       )
 
       self.play(
@@ -888,6 +906,51 @@ class Puzzle(MovingCameraScene):
         Unwrite(right_train_brace),
         Unwrite(fly_distance_brace),
       )
+
+      distance_brace.become(BraceBetweenPoints(left_train_pos, right_train_pos)).next_to(track, direction=DOWN, buff=.2)
+      distance_between_trains = MathTex(r"s_{\text{leg" + f"{i+1}" + "}}").next_to(distance_brace, direction=DOWN, buff=.2)
+
+      if i != 3:
+        # Briefly display the total available distance and then unwrite
+        self.play(
+          Write(distance_brace),
+          Write(distance_between_trains),
+        )
+
+        self.play(
+          Unwrite(distance_brace),
+          Unwrite(distance_between_trains),
+        )
+
+        # Now visually show that the total available distance is actually one-third of the previous
+        # This part is actually being replicated from before, like the clown that I am
+        left_train_brace = BraceBetweenPoints(initial_left_train_pos, left_train_pos).shift(DOWN*.25)
+        right_train_brace = BraceBetweenPoints(right_train_pos, initial_right_train_pos).shift(DOWN*.25)
+        available_distance_brace = BraceBetweenPoints(left_train_pos, right_train_pos).shift(DOWN*.25)
+
+        self.play(
+          Write(left_train_brace),
+          Write(right_train_brace)
+        )
+
+        self.play(
+          Write(available_distance_brace),
+          run_time=.3
+        )
+
+        self.play(
+          Indicate(available_distance_brace),
+        )
+
+        self.play(
+          Unwrite(left_train_brace),
+          Unwrite(right_train_brace),
+          Unwrite(available_distance_brace),
+        )
+
+        # Now update the initial positions of the trains for the new leg
+        initial_left_train_pos = left_train_pos
+        initial_right_train_pos = right_train_pos
 
       gojo_fly.resume_roaming()
       left_complex_train.resume_roaming()
@@ -944,7 +1007,6 @@ class Puzzle(MovingCameraScene):
     final_medium_answer = MathTex(r"100km").next_to(final_expression, direction=DOWN, buff=1)
 
     self.play(Write(final_expression))
-
 
     self.play(
       Write(final_medium_answer),
