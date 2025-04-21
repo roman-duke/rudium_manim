@@ -952,9 +952,11 @@ class Puzzle(MovingCameraScene):
         initial_left_train_pos = left_train_pos
         initial_right_train_pos = right_train_pos
 
-      gojo_fly.resume_roaming()
-      left_complex_train.resume_roaming()
-      right_complex_train.resume_roaming()
+
+        # Resume the roaming
+        gojo_fly.resume_roaming()
+        left_complex_train.resume_roaming()
+        right_complex_train.resume_roaming()
 
       self.play(
         self.camera.frame.animate.scale(1),
