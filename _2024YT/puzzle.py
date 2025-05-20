@@ -257,7 +257,7 @@ class Puzzle(MovingCameraScene):
     #========== ANIMATE THE CREATION OF THE REQUIRED MOBJECTS ONTO THE SCENE. ==========#
     track = Line(start=LEFT*12, end=RIGHT*12).shift(DOWN*2)
 
-    self.play(Write(track))
+    # self.play(Write(track))
 
     # Create the left train
     left_train = SimpleTrain(2)\
@@ -272,18 +272,18 @@ class Puzzle(MovingCameraScene):
       .shift(RIGHT * 5)\
       .rotate(PI, axis=UP)
 
-    self.play(
-      AnimationGroup(
-        Write(left_train),
-        Write(right_train),
-        lag_ratio=.5
-      ),
-      run_time=7
-    )
+    # self.play(
+    #   AnimationGroup(
+    #     Write(left_train),
+    #     Write(right_train),
+    #     lag_ratio=.5
+    #   ),
+    #   run_time=7
+    # )
 
     # Using a brace, show the initial distance between the two trains, then add an updater to track the changes
     distance_brace = BraceBetweenPoints(left_train.get_right(), right_train.get_left()).next_to(track, direction=DOWN, buff=.2)
-    distance_between_trains = DecimalNumber(number=100, num_decimal_places=0, font_size=30).next_to(distance_brace, direction=DOWN, buff=.2)
+    distance_between_trains = MathTex("100 \mathrm{km}").next_to(distance_brace, direction=DOWN, buff=.2).scale(.5)
 
     # Add a vector to indicate the speed of each of the trains
     left_train_velocity_vector = Arrow(start=LEFT, end=RIGHT).next_to(left_train, direction=UP, buff=.2).scale(.75, True)
@@ -295,55 +295,58 @@ class Puzzle(MovingCameraScene):
     left_train_velocity_annot = VGroup(left_train_velocity_vector, left_train_velocity_label)
     right_train_velocity_annot = VGroup(right_train_velocity_vector, right_train_velocity_label)
 
-    self.play(
-      Create(distance_brace),
-      Write(distance_between_trains),
-      Write(left_train_velocity_annot),
-      Write(right_train_velocity_annot)
-    )
+    # self.play(
+    #   Create(distance_brace),
+    #   Write(distance_between_trains),
+    #   Write(left_train_velocity_annot),
+    #   Write(right_train_velocity_annot),
+    #   run_time=2
+    # )
 
     # Animate the creation of our fly, Gojo.
     gojo_fly = GojoFly('./_2024YT/fly_2trains/assets/gojo_fly.svg', WHITE).rotate(PI, axis=Y_AXIS)
-    self.play(
-      Write(gojo_fly),
-      gojo_fly.animate.scale(0.15).next_to(left_train, direction=RIGHT, buff=0.1),
-      run_time=2
-    )
+    # self.play(
+    #   Write(gojo_fly),
+    #   gojo_fly.animate.scale(0.15).next_to(left_train, direction=RIGHT, buff=0.1),
+    #   run_time=2
+    # )
 
-    # Make the fly oscillate at the starting position
-    self.play(
-      gojo_fly.animate.shift(UP * 0.125),
-     )
+    # # Make the fly oscillate at the starting position
+    # self.play(
+    #   gojo_fly.animate.shift(UP * 0.125),
+    #  )
 
     # Save the initial states of the fly and trains
     left_train.save_state()
     right_train.save_state()
+    fly_initial_pos = gojo_fly.get_center()
     #======================================================================================#
 
 
-    #========= Simulate the movement of the trains and the fly (loop a few times)  ========#
-    def puzzle_demo():
-      self.play(
-        AnimationGroup(
-          left_train.animate(rate_func=linear).shift(RIGHT * 5 - np.array((left_train.width/2 + .03, 0.0, 0.0))),
-          right_train.animate(rate_func=linear).shift(LEFT * 5 + np.array((right_train.width/2 + .03, 0.0, 0.0))),
-          run_time=10,
-        )
-      )
-      self.wait(0.3)
+    # #========= Simulate the movement of the trains and the fly (loop a few times)  ========#
+    # def puzzle_demo():
+    #   self.play(
+    #     AnimationGroup(
+    #       left_train.animate(rate_func=linear).shift(RIGHT * 5 - np.array((left_train.width/2 + .03, 0.0, 0.0))),
+    #       right_train.animate(rate_func=linear).shift(LEFT * 5 + np.array((right_train.width/2 + .03, 0.0, 0.0))),
+    #       run_time=10,
+    #     )
+    #   )
+    #   self.wait(0.3)
 
-      # Reset the fly and trains to their initial positions
-      self.play(
-        Restore(left_train),
-        Restore(right_train),
-      )
+    #   # Reset the fly and trains to their initial positions
+    #   self.play(
+    #     Restore(left_train),
+    #     Restore(right_train),
+    #   )
 
-      self.wait(0.3)
+    #   self.wait(0.3)
 
-    gojo_fly.roam(left_train, right_train)
+    # gojo_fly.roam(left_train, right_train)
 
-    for _ in range(2):
-      puzzle_demo()
+    # for _ in range(5):
+    #   puzzle_demo()
+    #   gojo_fly.move_to(fly_initial_pos)
     #======================================================================================#
 
     #============================== EASY SOLUTION SCENE ===================================#
@@ -365,10 +368,7 @@ class Puzzle(MovingCameraScene):
     easy_title.add(easy_text, easy_border)
 
     self.play(
-      AnimationGroup(
-        Write(easy_title),
-        lag_ratio=.75
-      )
+      Write(easy_title),
     )
 
     self.play(
@@ -376,8 +376,8 @@ class Puzzle(MovingCameraScene):
     )
 
     # Add necessary mobjects (fly, trains and braces) back to the scene
-    self.add(gojo_fly, left_train, right_train, track, distance_brace, distance_between_trains)
-    self.wait(0.5)
+    self.add(gojo_fly, left_train, right_train, track, distance_brace, distance_between_trains, left_train_velocity_annot, right_train_velocity_annot)
+    self.wait(2)
 
     # zoom in on the fly and then fade out, with a flash
     self.camera.frame.save_state()
@@ -400,10 +400,11 @@ class Puzzle(MovingCameraScene):
 
     self.play(self.camera.frame.animate.restore())
 
+    self.wait(16)
+
     self.play(
       Uncreate(distance_brace),
       Unwrite(distance_between_trains),
-      run_time=.75
     )
 
     # Display two braces that track the distance covered of the left and right trains
@@ -475,7 +476,7 @@ class Puzzle(MovingCameraScene):
         lag_ratio=.75
       )
     )
-    self.wait(0.3)
+    self.wait(2)
 
     # #===================== Animation of the Easy Solution at the top right of the screen ========================#
     self.camera.frame.save_state()
@@ -549,6 +550,8 @@ class Puzzle(MovingCameraScene):
         lag_ratio=1
       )
     )
+
+    self.wait(7)
 
     self.play(
       FadeOut(time_taken_substituted, time_taken)
