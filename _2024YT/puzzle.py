@@ -1084,6 +1084,8 @@ class Puzzle(MovingCameraScene):
       Write(air_resistance)
     )
 
+    self.wait(5.5)
+
     self.play(
       FadeOut(air_resistance)
     )
@@ -1119,7 +1121,8 @@ class Puzzle(MovingCameraScene):
       Write(left_mini_frame),
       Write(right_mini_frame),
       Write(left_branch),
-      Write(right_branch)
+      Write(right_branch),
+      run_time=4
     )
 
     linear_drag_equation = MathTex(r'\mathbf{F}_{\tiny \text{LD}} = -b\mathbf{v}')\
@@ -1149,6 +1152,8 @@ class Puzzle(MovingCameraScene):
         lag_ratio=.9
       ),
     )
+
+    self.wait(17)
 
     self.play(
       Circumscribe(right_mini_frame),
@@ -1216,7 +1221,7 @@ class Puzzle(MovingCameraScene):
         bottom_arrow_group,
         shift=UP
       ),
-      run_time=.5
+      run_time=2
     )
 
     self.play(
@@ -1233,18 +1238,29 @@ class Puzzle(MovingCameraScene):
     self.play(
       simplified_gojo.animate.shift(RIGHT * 2),
       rate_func=there_and_back,
-      run_time=2
+      run_time=4
     )
 
     self.play(
       FadeOut(simplified_gojo)
     )
 
-    equation_of_motion = MathTex(r'm\frac{dv}{dt} = -cv^2').scale(.5).shift(UP)
+    equation_of_motion_one = MathTex(r'\mathbf{F_{\tiny \text{QD}}} = -cv^2').scale(.5).shift(UP)
+    equation_of_motion_two = MathTex(r'm\frac{dv}{dt} = -cv^2').scale(.5).shift(UP)
 
     self.play(
-      Write(equation_of_motion)
+      Write(equation_of_motion_one)
     )
+
+    self.wait(11)
+
+    self.play(
+      TransformMatchingTex(
+        equation_of_motion_one, equation_of_motion_two
+      )
+    )
+
+    self.wait(9)
 
     simplified_solution_to_the_equation = MathTex(
       r"m\frac{dv'}{v^2} = -c dt \\  \
@@ -1252,11 +1268,12 @@ class Puzzle(MovingCameraScene):
         m(\frac{1}{v_0} - \frac{1}{v}) = -ct"
     )\
     .scale(.5)\
-    .next_to(equation_of_motion, direction=DOWN)\
-    .align_to(equation_of_motion, direction=RIGHT)
+    .next_to(equation_of_motion_two, direction=DOWN)\
+    .align_to(equation_of_motion_two, direction=RIGHT)
 
     self.play(
-      Write(simplified_solution_to_the_equation)
+      Write(simplified_solution_to_the_equation),
+      run_time=6
     )
 
     velocity_equation = MathTex(r"v(t) = \frac{v_0}{ {{ 1 + cv_0t/m}} }")\
@@ -1273,6 +1290,8 @@ class Puzzle(MovingCameraScene):
       Write(velocity_equation)
     )
 
+    self.wait(7)
+
     self.play(
       TransformMatchingTex(velocity_equation, simplified_velocity_equation)
     )
@@ -1283,9 +1302,11 @@ class Puzzle(MovingCameraScene):
     ).scale(.5)
 
     self.play(
-      FadeOut(equation_of_motion, simplified_velocity_equation),
+      FadeOut(equation_of_motion_two, simplified_velocity_equation),
       TransformMatchingTex(simplified_solution_to_the_equation, penultimate_solution_to_the_equation)
     )
+
+    self.wait(8)
 
     final_solution_to_the_equation = MathTex(r'x(t) = v_0\tau\ln(1 + t/\tau)')
 
@@ -1303,26 +1324,25 @@ class Puzzle(MovingCameraScene):
 
     self.play(
       FadeOut(final_solution_to_the_equation),
-      run_time=2
+      run_time=10
     )
 
     # #=============================== CONCLUSION SCENE ======================================#
+    # self.play(frame_border.animate.set_fill(GRAY_C, 1))
+    # self.play(frame_border.animate.set_color(GRAY_C))
+
     # other_hidden_complexity_examples = [
     #   {
-    #     "topic": "Newtonian Mechanics vs. General Relativity",
-    #     "run_time": 2,
-    #   },
-    #   {
     #     "topic": "The n-body problem",
-    #     "run_time": 2,
+    #     "run_time": 3,
     #   },
     #   {
     #     "topic": "Conway's game of life",
-    #     "run_time": 10,
+    #     "run_time": 3,
     #   },
     #   {
-    #     "topic": "Finding the shortest path - Dijkstra vs A* vs NP",
-    #     "run_time": 10,
+    #     "topic": "Fermat's Last Theorem",
+    #     "run_time": 3,
     #   },
     # ]
 
@@ -1337,7 +1357,7 @@ class Puzzle(MovingCameraScene):
     #   )
 
     #   self.play(
-    #     example_mobject.animate.shift(UP * 3)
+    #     example_mobject.animate.shift(UP * 2.5)
     #   )
 
     #   self.wait(example["run_time"])
